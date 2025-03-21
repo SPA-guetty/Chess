@@ -3,6 +3,7 @@ class pawn extends piece {
         super(x, y, color);
         this.type = "pawn";
         this.firstMove = true;
+        this.symbol = (color === "white") ? "♙" : "♟";
     }
 
     move(x, y) {
@@ -48,3 +49,4 @@ class pawn extends piece {
         return false;
     }
 }
+module.exports = pawn;

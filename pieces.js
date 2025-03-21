@@ -19,3 +19,4 @@ class Pieces {
         return this;
     }
 }
+module.exports = Pieces;

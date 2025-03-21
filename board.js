@@ -15,3 +15,4 @@ class Board {
         return board;
     }
 }
+module.exports = Board;

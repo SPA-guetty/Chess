@@ -2,7 +2,6 @@ class Pieces {
     static name = "";
     static color = "";
     static position = [];
-    static move = [];
     static isCheck = false;
     static isCheckmate = false;
     static isStalemate = false;
@@ -11,7 +10,6 @@ class Pieces {
         this.name = name;
         this.color = color;
         this.position = position;
-        this.move = move;
         this.isCheck = isCheck;
         this.isCheckmate = isCheckmate;
         this.isStalemate = isStalemate;

@@ -5,12 +5,27 @@ class rook extends piece {
     this.symbol = (color == "white") ? "♖" : "♜";
   }
 
-  // Check if the move is valid
-  move(x, y) {
-    if (this.x == x || this.y == y) {
+  validMove(x, y) {
+    if (this.x == x && this.y != y) {
       return true;
     }
-    return false;
+    if (this.x != x && this.y == y) {
+      return true;
+    }
+    return false
+  }
+
+  allValidMoves() {
+    const moves = [];
+    for (let i = 0; i < 8; i++) {
+      if (this.validMove(i, this.y)) {
+        moves.push({ x: i, y: this.y });
+      }
+      if (this.validMove(this.x, i)) {
+        moves.push({ x: this.x, y: i });
+      }
+    }
+    return moves;
   }
 }
 module.exports = rook;

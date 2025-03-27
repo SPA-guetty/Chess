@@ -18,5 +18,10 @@ class Pieces {
     static getPiece() {
         return this;
     }
+
+    move() {
+        this.position = [x, y];
+    }
+    
 }
 module.exports = Pieces;

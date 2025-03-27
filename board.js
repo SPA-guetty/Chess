@@ -7,6 +7,7 @@ class Board {
         this.moveHistory = [];
         this.gameState = 'active'; // active, check, checkmate, stalemate
         this.initializePieces();
+        this.checkState = {white: false, black: false};
     }
 
     createEmptyBoard() {
@@ -47,27 +48,68 @@ class Board {
         });
     }
 
-    movePiece(from, to) {
+    getPiece(position) {
+        if(this.isPositionValid(position)) {
+            return this.squares[position.x][position.y];
+        }
+        return null;
+    }
+
+    isPositionValid(position) {
+        return position.x >= 0 && position.x < 8 && position.y >= 0 && position.y < 8;
+    }
+
+    isSquareEmpty(position) {
+        return this.squares[position.x][position.y] == null;
+    }
+
+    isSquareOccupiedByColor(position, color) {
+        return this.isPositionValid(position) &&
+            this.squares[position.x][position.y] != null &&
+            this.squares[position.x][position.y].color === color;
+    }
+
+    movePiece(from, to, promotionType = null) {
+        if (!this.isPositionValid(from) || !this.isPositionValid(to)) {
+            return false;
+        }
         const piece = this.squares[from.x][from.y];
-        if (piece == null) {
+        if (piece == null || piece.color !== this.currentPlayer) {
             return false;
         }
-        if (piece.color !== this.currentPlayer) {
+
+        // Check if the move is legal
+        const legalMoves = piece.getLegalMoves();
+        const isLegal = legalMoves.some(move => move.x === to.x && move.y === to.y);
+        if (!isLegal) {
             return false;
         }
-        if (!piece.move(to.x, to.y)) {
-            return false;
+
+        // Check if the move is en passant
+        if (piece instanceof Pawn && Math.abs(from.y - to.y) === 1 && this.isSquareEmpty(to)) {
+            // En passant
+            const takenPawnPos = {x: from.x, y: to.y};
+            this.squares[takenPawnPos.x][takenPawnPos.y] = null;
         }
-        if (this.squares[to.x][to.y] != null) {
-            if (this.squares[to.x][to.y].color === this.currentPlayer) {
-                return false;
-            }
+
+        // Implementing castling
+        if (piece instanceof King && Math.abs(from.y - to.y) === 2) {
+            // Castling
+            const rookFromY = to.y > from.y ? 7 : 0;
+            const rookToY = to.y > from.y ? to.y - 1 : to.y + 1;
+            const rook = this.squares[from.x][rookFromY];
+
+            this.squares[from.x][rookFromY] = null;
+            this.squares[from.x][rookToY] = rook;
+            rook.position = {x: from.x, y: rookToY};
+            rook.hasMoved = true;
         }
+
+        // Moving the piece
         this.squares[from.x][from.y] = null;
-        this.squares[to.x][to.y] = piece;
-        this.moveHistory.push({ from, to });
-        this.currentPlayer = (this.currentPlayer === 'white') ? 'black' : 'white';
-        return true;
+
+        // Check if the move is a promotion
+        
     }
 
     isCheck(color) {

@@ -1,31 +1,15 @@
 class rook extends piece {
-  constructor(color, x, y) {
-    super(color, x, y);
-    this.type = "rook";
-    this.symbol = (color == "white") ? "♖" : "♜";
+  constructor(color, position, board) {
+    super(color, position, board, 'rook');
   }
 
-  validMove(x, y) {
-    if (this.x == x && this.y != y) {
-      return true;
-    }
-    if (this.x != x && this.y == y) {
-      return true;
-    }
-    return false
-  }
-
-  allValidMoves() {
-    const moves = [];
-    for (let i = 0; i < 8; i++) {
-      if (this.validMove(i, this.y)) {
-        moves.push({ x: i, y: this.y });
-      }
-      if (this.validMove(this.x, i)) {
-        moves.push({ x: this.x, y: i });
-      }
-    }
-    return moves;
+  getPossibleMoves() {
+    const directions = [
+      { x: 1, y: 0 }, // right
+      { x: -1, y: 0 }, // left
+      { x: 0, y: 1 }, // down
+      { x: 0, y: -1 } // up
+    ];
+    return this.getStraightLineMoves(directions);
   }
 }
-module.exports = rook;

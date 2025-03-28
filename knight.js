@@ -1,18 +1,34 @@
 class knight extends piece {
-  constructor(x, y, color) {
-    super(x, y, color);
-    this.type = 'knight';
-    this.symbol = (color == 'white') ? '♘' : '♞';
+  constructor(color, position, board) {
+    super(color, position, board, 'knight');
   }
 
-  // Check if the move is valid
-  move(x, y) {
-    if (Math.abs(this.x - x) == 2 && Math.abs(this.y - y) == 1) {
-      return true;
-    } else if (Math.abs(this.x - x) == 1 && Math.abs(this.y - y) == 2) {
-      return true;
-    }
-    return false;
+  getPossibleMoves() {
+    const moves = [];
+    const knightMoves = [
+      { x: 2, y: 1 },
+      { x: 2, y: -1 },
+      { x: -2, y: 1 },
+      { x: -2, y: -1 },
+      { x: 1, y: 2 },
+      { x: 1, y: -2 },
+      { x: -1, y: 2 },
+      { x: -1, y: -2 }
+    ];
+
+    knightMoves.forEeach(offset => {
+      const newPos = {
+        x: this.position.x + offset.x,
+        y: this.position.y + offset.y
+      };
+
+      if (this.board.isPositionValid(newPos)) {
+        if (this.board.isSquareEmpty(newPos) || 
+            this.board.squares[newPos.x][newPos.y].color !== this.color) {
+          moves.push(newPos);
+        }
+      }
+    })
+    return moves;
   }
 }
-module.exports = knight;

@@ -152,18 +152,12 @@ class Board {
         }
     }
 
-    isCheck(color) {
-        const king = this.pieces.find(piece => piece.type === 'king' && piece.color === color);
-        if (king == null) {
-            return false;
+    updateCheckState() {
+        const kingPositions = {
+            white: this.pieces.find(p => p instanceof King && p.color === 'white')?.position,
+            black: this.pieces.find(p => p instanceof King && p.color === 'black')?.position,
         }
-        return this.pieces.some(piece => piece.color !== color && piece.canAttack(king.x, king.y));
-    }
-
-    isCheckmate(color) {
-        if (!this.isCheck(color)) {
-            return false;
-        }
-        return this.pieces.filter(piece => piece.color === color).every(piece => piece.allValidMoves().length === 0);
+        this.checkState.white = this.isPositionUnderAttack(kingPositions.white, 'black');
+        this.checkState.black = this.isPositionUnderAttack(kingPositions.black, 'white');
     }
 }

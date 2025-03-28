@@ -1,40 +1,19 @@
 class queen extends piece {
-  constructor(x, y, color) {
-    super(x, y, color);
-    this.name = "queen";
-    this.value = 9;
+  constructor(color, position, board) {
+    super(color, position, board, 'queen');
   }
 
-  move() {
-    let moves = [];
-    let directions = [
-      [1, 1],
-      [1, -1],
-      [-1, 1],
-      [-1, -1],
-      [0, 1],
-      [0, -1],
-      [1, 0],
-      [-1, 0],
+  getPossibleMoves() {
+    const directions = [
+      { x: 1, y: 0 }, // right
+      { x: -1, y: 0 }, // left
+      { x: 0, y: 1 }, // down
+      { x: 0, y: -1 }, // up
+      { x: 1, y: 1 }, // down right
+      { x: -1, y: 1 }, // down left
+      { x: 1, y: -1 }, // up right
+      { x: -1, y: -1 } // up left
     ];
-    for (let i = 0; i < directions.length; i++) {
-      let direction = directions[i];
-      let x = this.x + direction[0];
-      let y = this.y + direction[1];
-      while (x >= 0 && x < 8 && y >= 0 && y < 8) {
-        if (board[x][y] == null) {
-          moves.push([x, y]);
-        } else if (board[x][y].color != this.color) {
-          moves.push([x, y]);
-          break;
-        } else {
-          break;
-        }
-        x += direction[0];
-        y += direction[1];
-      }
-    }
-    return moves;
+    return this.getStraightLineMoves(directions);
   }
 }
-module.exports = queen;

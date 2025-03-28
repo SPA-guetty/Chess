@@ -109,7 +109,47 @@ class Board {
         this.squares[from.x][from.y] = null;
 
         // Check if the move is a promotion
-        
+        if (piece instanceof Pawn && (to.x === 0 || to.x === 7)) {
+            const promotedPiece = this.createPromotedPiece(promotionType, piece.color, to);
+            this.squares[to.x][to.y] = promotedPiece;
+            this.pieces = this.pieces.filter(p => p !== piece);
+            this.pieces.push(promotedPiece);
+        } else {
+            this.squares[to.x][to.y] = piece;
+            piece.position = to;
+            piece.hasMoved = true;
+        }
+
+        // Update the move history
+        this.moveHistory.push({
+            from,
+            to,
+            piece: piece.type,
+            color: piece.color,
+            captured: this.getPiece(to)?.type,
+            promotion: promotionType,
+        });
+
+        // Check for check
+        this.updateCheckState();
+
+        // Switch players
+        this.currentPlayer = this.currentPlayer === 'white' ? 'black' : 'white';
+
+        // Check game status
+        this.updateGameState();
+
+        return true;
+    }
+
+    createPromotedPiece(type, color, position) {
+        switch (type.tolowerCase()) {
+            case 'queen': return new Queen(color, position, this);
+            case 'rook': return new Rook(color, position, this);
+            case 'bishop': return new Bishop(color, position, this);
+            case 'knight': return new Knight(color, position, this);
+            default: return new Queen(color, position, this); 
+        }
     }
 
     isCheck(color) {

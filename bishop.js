@@ -1,49 +1,15 @@
 class bishop extends piece {
-    constructor(x, y, color) {
-        super(x, y, color);
-        this.type = "bishop";
-        this.symbol = (color === "white") ? "♗" : "♝";
+    constructor(color, position, board) {
+        super(color, position, board, 'bishop');
     }
 
-    
-    move(x, y) {
-        if (this.x == x && this.y == y) {
-            return false;
-        }
-        if (Math.abs(this.x - x) == Math.abs(this.y - y)) {
-            if (this.x < x && this.y < y) {
-                for (let i = 1; i < Math.abs(this.x - x); i++) {
-                    if (board[this.x + i][this.y + i] != null) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            if (this.x < x && this.y > y) {
-                for (let i = 1; i < Math.abs(this.x - x); i++) {
-                    if (board[this.x + i][this.y - i] != null) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            if (this.x > x && this.y < y) {
-                for (let i = 1; i < Math.abs(this.x - x); i++) {
-                    if (board[this.x - i][this.y + i] != null) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            if (this.x > x && this.y > y) {
-                for (let i = 1; i < Math.abs(this.x - x); i++) {
-                    if (board[this.x - i][this.y - i] != null) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
+    getPossibleMoves() {
+        const directions = [
+            { x: 1, y: 1 }, // down right
+            { x: -1, y: 1 }, // down left
+            { x: 1, y: -1 }, // up right
+            { x: -1, y: -1 } // up left
+        ];
+        return this.getStraightLineMoves(directions);
     }
 }

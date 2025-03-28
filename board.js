@@ -160,4 +160,52 @@ class Board {
         this.checkState.white = this.isPositionUnderAttack(kingPositions.white, 'black');
         this.checkState.black = this.isPositionUnderAttack(kingPositions.black, 'white');
     }
+
+    isPositionUnderAttack(position, byColor) {
+        if (!position) return false;
+        return this.pieces.some(piece => {
+            if (piece.color !== byColor) return false;
+            if (piece instanceof Pawn) {
+                const direction = piece.color === 'white' ? -1 : 1;
+                return (Math.abs(piece.position.y - position.y) === 1 &&
+                    (piece.position.x + direction === position.x))
+            }
+            return piece.getPossibleMoves().some(move => move.x === position.x && move.y === position.y);
+        })
+    }
+
+    updateGameState() {
+        const currentColor = this.currentPlayer;
+        const opponentColor = currentColor === 'white' ? 'black' : 'white';
+
+        // Check for any legal moves
+        const hasLegalMoves = this.pieces.some(piece =>
+            piece.color === opponentColor && piece.getLegalMoves().length > 0
+        );
+        if (!hasLegalMoves) {
+            if (this.checkState[opponentColor]) {
+                this.gameState = `checkmate`;
+            } else {
+                this.gameState = 'stalemate';
+            }
+        }
+    }
+
+    wouldMoveCauseCheck(from, to, color) {
+        // Simulates a move
+        const originalFromPiece = this.squares[from.x][from.y];
+        const originalToPiece = this.squares[to.x][to.y];
+        this.squares[from.x][from.y] = null;
+        this.squares[to.x][to.y] = originalFromPiece;
+
+        // Check if the king of the moving color is in check
+        const kingPosition = this.pieces.find(p => p instanceof King && p.color === color)?.position;
+        const isInCheck = kingPosition ? this.isPositionUnderAttack(kingPosition, color === 'white' ? 'black' : 'white') : false;
+
+        // Ends the simulation
+        this.squares[from.x][from.y] = originalFromPiece;
+        this.squares[to.x][to.y] = originalToPiece;
+
+        return isInCheck;
+    }
 }

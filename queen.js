@@ -1,4 +1,4 @@
-class queen extends piece {
+class Queen extends Piece {
   constructor(color, position, board) {
     super(color, position, board, 'queen');
   }

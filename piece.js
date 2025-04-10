@@ -2,13 +2,13 @@ class Piece {
     constructor(color, position, board, type) {
         this.color = color; // white or black
         this.position = position; // [x, y]
-        this.board = board; // 2D array
+        this.board = board; 
         this.type = type; // pawn, rook, knight, bishop, queen, king
         this.hasMoved = false; 
     }
 
     getLegalMoves() {
-        const possibleMoves = this.getLegalMoves();
+        const possibleMoves = this.getPossibleMoves();
         return possibleMoves.filter(move =>
             !this.board.wouldMoveCauseCheck(this.position, move, this.color)
         );
@@ -18,7 +18,7 @@ class Piece {
         throw new Error("Method getPossibleMoves() must be implemented in derived classes");
     }
 
-    getStraightLineMoves() {
+    getStraightLineMoves(directions) {
         const moves = [];
         for (const dir of directions) {
             let newPos = {

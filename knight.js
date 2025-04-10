@@ -1,4 +1,4 @@
-class knight extends piece {
+class Knight extends Piece {
   constructor(color, position, board) {
     super(color, position, board, 'knight');
   }
@@ -16,7 +16,7 @@ class knight extends piece {
       { x: -1, y: -2 }
     ];
 
-    knightMoves.forEeach(offset => {
+    knightMoves.forEach(offset => {
       const newPos = {
         x: this.position.x + offset.x,
         y: this.position.y + offset.y

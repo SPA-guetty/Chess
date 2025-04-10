@@ -6,8 +6,8 @@ class Board {
         this.currentPlayer = 'white';
         this.moveHistory = [];
         this.gameState = 'active'; // active, check, checkmate, stalemate
-        this.initializePieces();
         this.checkState = {white: false, black: false};
+        this.initializePieces();
     }
 
     createEmptyBoard() {
@@ -21,30 +21,36 @@ class Board {
     }
 
     setupStandardGame() {
-        this.pieces.push(new Rook('white', 0, 0));
-        this.pieces.push(new Knight('white', 1, 0));
-        this.pieces.push(new Bishop('white', 2, 0));
-        this.pieces.push(new Queen('white', 3, 0));
-        this.pieces.push(new King('white', 4, 0));
-        this.pieces.push(new Bishop('white', 5, 0));
-        this.pieces.push(new Knight('white', 6, 0));
-        this.pieces.push(new Rook('white', 7, 0));
+        // Create pieces with proper position objects
+        this.pieces.push(new Rook('white', {x: 0, y: 0}, this));
+        this.pieces.push(new Knight('white', {x: 1, y: 0}, this));
+        this.pieces.push(new Bishop('white', {x: 2, y: 0}, this));
+        this.pieces.push(new Queen('white', {x: 3, y: 0}, this));
+        this.pieces.push(new King('white', {x: 4, y: 0}, this));
+        this.pieces.push(new Bishop('white', {x: 5, y: 0}, this));
+        this.pieces.push(new Knight('white', {x: 6, y: 0}, this));
+        this.pieces.push(new Rook('white', {x: 7, y: 0}, this));
+
         for (let i = 0; i < 8; i++) {
-            this.pieces.push(new Pawn('white', i, 1));
+            this.pieces.push(new Pawn('white', {x: i, y: 1}, this));
         }
-        this.pieces.push(new Rook('black', 0, 7));
-        this.pieces.push(new Knight('black', 1, 7));
-        this.pieces.push(new Bishop('black', 2, 7));
-        this.pieces.push(new Queen('black', 3, 7));
-        this.pieces.push(new King('black', 4, 7));
-        this.pieces.push(new Bishop('black', 5, 7));
-        this.pieces.push(new Knight('black', 6, 7));
-        this.pieces.push(new Rook('black', 7, 7));
+
+        this.pieces.push(new Rook('black', {x: 0, y: 7}, this));
+        this.pieces.push(new Knight('black', {x: 1, y: 7}, this));
+        this.pieces.push(new Bishop('black', {x: 2, y: 7}, this));
+        this.pieces.push(new Queen('black', {x: 3, y: 7}, this));
+        this.pieces.push(new King('black', {x: 4, y: 7}, this));
+        this.pieces.push(new Bishop('black', {x: 5, y: 7}, this));
+        this.pieces.push(new Knight('black', {x: 6, y: 7}, this));
+        this.pieces.push(new Rook('black', {x: 7, y: 7}, this));
+
         for (let i = 0; i < 8; i++) {
-            this.pieces.push(new Pawn('black', i, 6));
+            this.pieces.push(new Pawn('black', {x: i, y: 6}, this));
         }
+
+        // Place pieces on the board
         this.pieces.forEach(piece => {
-            this.squares[piece.x][piece.y] = piece;
+            this.squares[piece.position.x][piece.position.y] = piece;
         });
     }
 
@@ -60,7 +66,7 @@ class Board {
     }
 
     isSquareEmpty(position) {
-        return this.squares[position.x][position.y] == null;
+        return this.isPositionValid(position) && this.squares[position.x][position.y] == null;
     }
 
     isSquareOccupiedByColor(position, color) {
@@ -88,7 +94,7 @@ class Board {
         // Check if the move is en passant
         if (piece instanceof Pawn && Math.abs(from.y - to.y) === 1 && this.isSquareEmpty(to)) {
             // En passant
-            const takenPawnPos = {x: from.x, y: to.y};
+            const takenPawnPos = {x: to.x, y: from.y};
             this.squares[takenPawnPos.x][takenPawnPos.y] = null;
         }
 
@@ -110,7 +116,7 @@ class Board {
 
         // Check if the move is a promotion
         if (piece instanceof Pawn && (to.x === 0 || to.x === 7)) {
-            const promotedPiece = this.createPromotedPiece(promotionType, piece.color, to);
+            const promotedPiece = this.createPromotedPiece(promotionType || 'queen', piece.color, to);
             this.squares[to.x][to.y] = promotedPiece;
             this.pieces = this.pieces.filter(p => p !== piece);
             this.pieces.push(promotedPiece);
@@ -143,7 +149,7 @@ class Board {
     }
 
     createPromotedPiece(type, color, position) {
-        switch (type.tolowerCase()) {
+        switch (type.toLowerCase()) {
             case 'queen': return new Queen(color, position, this);
             case 'rook': return new Rook(color, position, this);
             case 'bishop': return new Bishop(color, position, this);
@@ -156,7 +162,7 @@ class Board {
         const kingPositions = {
             white: this.pieces.find(p => p instanceof King && p.color === 'white')?.position,
             black: this.pieces.find(p => p instanceof King && p.color === 'black')?.position,
-        }
+        };
         this.checkState.white = this.isPositionUnderAttack(kingPositions.white, 'black');
         this.checkState.black = this.isPositionUnderAttack(kingPositions.black, 'white');
     }
@@ -166,12 +172,12 @@ class Board {
         return this.pieces.some(piece => {
             if (piece.color !== byColor) return false;
             if (piece instanceof Pawn) {
-                const direction = piece.color === 'white' ? -1 : 1;
+                const direction = piece.color === 'white' ? 1 : -1;
                 return (Math.abs(piece.position.y - position.y) === 1 &&
-                    (piece.position.x + direction === position.x))
+                    (piece.position.x + direction === position.x));
             }
             return piece.getPossibleMoves().some(move => move.x === position.x && move.y === position.y);
-        })
+        });
     }
 
     updateGameState() {
@@ -180,14 +186,19 @@ class Board {
 
         // Check for any legal moves
         const hasLegalMoves = this.pieces.some(piece =>
-            piece.color === opponentColor && piece.getLegalMoves().length > 0
+            piece.color === currentColor && piece.getLegalMoves().length > 0
         );
+        
         if (!hasLegalMoves) {
-            if (this.checkState[opponentColor]) {
-                this.gameState = `checkmate`;
+            if (this.checkState[currentColor]) {
+                this.gameState = 'checkmate';
             } else {
                 this.gameState = 'stalemate';
             }
+        } else if (this.checkState[currentColor]) {
+            this.gameState = 'check';
+        } else {
+            this.gameState = 'active';
         }
     }
 
@@ -195,17 +206,35 @@ class Board {
         // Simulates a move
         const originalFromPiece = this.squares[from.x][from.y];
         const originalToPiece = this.squares[to.x][to.y];
+        
+        // Store original position for restoration
+        const originalPosition = {...originalFromPiece.position};
+        
+        // Make the move temporarily
         this.squares[from.x][from.y] = null;
         this.squares[to.x][to.y] = originalFromPiece;
+        originalFromPiece.position = {...to};
 
         // Check if the king of the moving color is in check
-        const kingPosition = this.pieces.find(p => p instanceof King && p.color === color)?.position;
+        const kingPosition = color === originalFromPiece.color && originalFromPiece instanceof King 
+            ? to 
+            : this.pieces.find(p => p instanceof King && p.color === color)?.position;
+            
         const isInCheck = kingPosition ? this.isPositionUnderAttack(kingPosition, color === 'white' ? 'black' : 'white') : false;
 
-        // Ends the simulation
+        // Restore board state
         this.squares[from.x][from.y] = originalFromPiece;
         this.squares[to.x][to.y] = originalToPiece;
+        originalFromPiece.position = originalPosition;
 
         return isInCheck;
+    }
+    
+    getGameStatus() {
+        return {
+            state: this.gameState,
+            currentPlayer: this.currentPlayer,
+            check: this.checkState
+        };
     }
 }

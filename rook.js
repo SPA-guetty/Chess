@@ -1,4 +1,4 @@
-class rook extends piece {
+class Rook extends Piece {
   constructor(color, position, board) {
     super(color, position, board, 'rook');
   }

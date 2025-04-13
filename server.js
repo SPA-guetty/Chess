@@ -18,7 +18,7 @@ const requestHandler = (request, response) => {
     let filPath = './index' + request.url 
 
     if (request.url === '/') {
-        filPath = './index/menu.html'
+        filPath = './index/home.html'
     }
 
     fs.readFile(filPath, (err, data) => {

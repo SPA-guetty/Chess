@@ -22,6 +22,7 @@ const requestHandler = (request, response) => {
     } else {
         filPath = './index/404.html'
     }
+    
 fs.readFile(filPath, (err, data) => {
         if (err) {
             response.writeHead(404, { 'Content-Type': 'text/html' })

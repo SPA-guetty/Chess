@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let board = new Board();
     let selectedPiece = null;
     let pendingPromotion = null;
+    let aiPlayer = new StockfishAI(board);
+    let playAgainstAI = true;
     
     // Initialize the board UI
     function initializeBoard() {
@@ -92,6 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         statusElement.textContent = statusText;
+
+        if (playAgainstAI && status.state === 'active' && status.currentPlayer === aiPlayer.color) {
+            setTimeout(() => aiPlayer.makeMove(), 500);
+        }
     }
     
     // Handle square click
@@ -189,6 +195,79 @@ document.addEventListener('DOMContentLoaded', () => {
         return symbols[piece.color][piece.type];
     }
     
+    function addAIControls() {
+        const controls = document.createElement('div');
+        controlsDiv.className = 'ai-controls';
+
+        const aiToggle = document.createElement('input');
+        aiToggle.type = 'checkbox';
+        aiToggle.id = 'ai-toggle';
+        aiToggle.checked = playAgainstAI;
+        aiToggle.addEventListener('change', () => {
+            playAgainstAI = aiToggle.checked;
+            if (playAgainstAI && board.currentPlayer === 'black') {
+                aiPlayer.makeMove();
+            }
+        });
+
+        const aiLabel = document.createElement('label');
+        aiToggleLabel.htmlFor = 'ai-toggle';
+        aiToggleLabel.textContent = 'Play against AI';
+
+        const difficultySlider = document.createElement('input');
+        difficultySlider.type = 'range';
+        difficultySlider.min = '1';
+        difficultySlider.max = '16';
+        difficultySlider.value = aiPlayer.skillLevel;
+        difficultySlider.id = 'difficulty-slider';
+        difficultySlider.addEventListener('change', () => {
+            aiPlayer.setSkillLevel(parseInt(difficultySlider.value, 10));
+        });
+
+        const difficultyLabel = document.createElement('label');
+        difficultyLabel.htmlFor = 'difficulty-slider';
+        difficultyLabel.textContent = 'AI Difficulty: ';
+
+        const difficultyValue = document.createElement('span');
+        difficultyValue.id = 'difficulty-value';
+        difficultyValue.textContent = aiPlayer.skillLevel;
+
+        difficultySlider.addEventListener('input', () => {
+            difficultyValue.textContent = difficultySlider.value;
+        });
+
+        // Color selection
+        const colorSelect = document.createElement('select');
+        colorSelect.id = 'ai-color';
+
+        const whiteOption = document.createElement('option');
+        whiteOption.value = 'black';
+        whiteOption.textContent = 'Play as White';
+
+        const blackOption = document.createElement('option');
+        blackOption.value = 'white';
+        blackOption.textContent = 'Play as Black';
+
+        colorSelect.appendChild(whiteOption);
+        colorSelect.appendChild(blackOption);
+        colorSelect.value = aiPlayer.color;
+
+        colorSelect.addEventListener('change', () => {
+            aiPlayer.setAIColor(colorSelect.value);
+        });
+
+        controls.appendChild(aiToggleLabel);
+        controls.appendChild(aiToggle);
+        controls.appendChild(docustomElements.createElement('br'));
+        controls.appendChild(difficultyLabel);
+        controls.appendChild(difficultySlider);
+        controls.appendChild(difficultyValue);
+        controls.appendChild(docustomElements.createElement('br'));
+        controls.appendChild(colorSelect);
+
+        document.querySelector('.controls').insertBefore(controlsDiv, boardElement);
+    }
+
     // Reset game
     resetButton.addEventListener('click', () => {
         board = new Board();
@@ -200,4 +279,5 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize the game
     initializeBoard();
+    addAIControls();
 });

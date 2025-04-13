@@ -28,7 +28,7 @@ class Knight extends Piece {
           moves.push(newPos);
         }
       }
-    })
+    });
     return moves;
   }
 }

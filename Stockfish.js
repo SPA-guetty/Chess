@@ -156,7 +156,7 @@ class StockfishAI {
 
     setAIColor(color) {
         this.aiColor = color;
-        if (this.board.currentPlayer === this.AIcolor) {
+        if (this.board.currentPlayer === this.aiColor) {
             this.makeMove();
         }
     }

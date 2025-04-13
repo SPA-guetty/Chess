@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function addAIControls() {
-        const controls = document.createElement('div');
+        const controlsDiv = document.createElement('div');
         controlsDiv.className = 'ai-controls';
 
         const aiToggle = document.createElement('input');
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        const aiLabel = document.createElement('label');
+        const aiToggleLabel = document.createElement('label');
         aiToggleLabel.htmlFor = 'ai-toggle';
         aiToggleLabel.textContent = 'Play against AI';
 
@@ -256,16 +256,16 @@ document.addEventListener('DOMContentLoaded', () => {
             aiPlayer.setAIColor(colorSelect.value);
         });
 
-        controls.appendChild(aiToggleLabel);
-        controls.appendChild(aiToggle);
-        controls.appendChild(docustomElements.createElement('br'));
-        controls.appendChild(difficultyLabel);
-        controls.appendChild(difficultySlider);
-        controls.appendChild(difficultyValue);
-        controls.appendChild(docustomElements.createElement('br'));
-        controls.appendChild(colorSelect);
+        controlsDiv.appendChild(aiToggleLabel);
+        controlsDiv.appendChild(aiToggle);
+        controlsDiv.appendChild(document.createElement('br'));
+        controlsDiv.appendChild(difficultyLabel);
+        controlsDiv.appendChild(difficultySlider);
+        controlsDiv.appendChild(difficultyValue);
+        controlsDiv.appendChild(document.createElement('br'));
+        controlsDiv.appendChild(colorSelect);
 
-        document.querySelector('.controls').insertBefore(controlsDiv, boardElement);
+        document.querySelector('.container').insertBefore(controlsDiv, boardElement);
     }
 
     // Reset game

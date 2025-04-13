@@ -1,4 +1,4 @@
-class king extends Piece {
+class King extends Piece {
     constructor(color, position, board) {
         super(color, position, board, 'king');
     }
@@ -31,19 +31,20 @@ class king extends Piece {
         });
 
         // Castle
-        if (!this.hasMoved && this.board.checkState[this.color]) {
+        if (!this.hasMoved && !this.board.checkState[this.color]) {
             // Castle short
             const kingsideRook = this.board.squares[this.position.x][7];
             if (kingsideRook instanceof Rook && !kingsideRook.hasMoved) {
                 const emptyBetween = [5, 6].every(y =>
-                    this.board.isSquareEmpty({x: this.position.x,y })
+                    this.board.isSquareEmpty({x: this.position.x, y})
                 );
                 const notUnderAttack = [5, 6].every(y =>
-                    !this.board.isSquareUnderAttack({ x: this.position.x, y }, this.color === 'white' ? 'black' : 'white')
+                    !this.board.isPositionUnderAttack({ x: this.position.x, y }, this.color === 'white' ? 'black' : 'white')
                 );
-            }
-            if (emptyBetween && notUnderAttack) {
-                moves.push({ x: this.position.x, y: 6 });
+                
+                if (emptyBetween && notUnderAttack) {
+                    moves.push({ x: this.position.x, y: 6 });
+                }
             }
             // Castle long
             const queensideRook = this.board.squares[this.position.x][0];

@@ -281,3 +281,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeBoard();
     addAIControls();
 });
+
+//test

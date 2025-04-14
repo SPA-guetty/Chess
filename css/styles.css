@@ -1,0 +1,160 @@
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+}
+
+#game-status {
+    margin: 15px 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    border: 2px solid #333;
+    margin: 0 auto;
+    width: 480px;
+    height: 480px;
+}
+
+.square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    cursor: pointer;
+    position: relative;
+}
+
+.white {
+    background-color: #f0d9b5;
+}
+
+.black {
+    background-color: #b58863;
+}
+
+.selected {
+    background-color: #aaddff !important;
+}
+
+.possible-move {
+    position: relative;
+}
+
+.possible-move::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.possible-capture::before {
+    content: '';
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    border : 2px solid rgba(255, 0, 0, 0.4);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+#reset-button:hover {
+    background-color: #45a049;
+}
+
+#promotion-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.promotion-options {
+    display: flex;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.promotion-piece {
+    font-size: 48px;
+    margin: 0 10px;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ddd;
+}
+
+.promotion-piece:hover {
+    background-color: #f0f0f0;
+}
+
+.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.check {
+    background-color: #ffaaaa;
+}
+
+.ai-controls {
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 480px;
+    text-align: left;
+}
+
+.ai-controls label {
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.ai-controls input[type="range"] {
+    width: 200px;
+    margin: 10px 0;
+}
+
+.ai-controls select {
+    margin: 10px 0;
+    padding: 5px;
+}
+
+#difficulty-value {
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+}

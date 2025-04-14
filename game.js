@@ -1,8 +1,28 @@
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error("JavaScript error:", message, "at", source, "line", lineno);
+    return false;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const boardElement = document.getElementById('chessboard');
     const statusElement = document.getElementById('game-status');
     const resetButton = document.getElementById('reset-button');
     const promotionModal = document.getElementById('promotion-modal');
+    
+    // Force hide the promotion modal with both class and inline style
+    function forceHideModal() {
+        if (promotionModal) {
+            promotionModal.classList.add('hidden');
+            promotionModal.style.display = 'none';
+            console.log('Modal hidden with force hide');
+        }
+    }
+    
+    // Call it immediately
+    forceHideModal();
+    
+    // And again after a small delay to make sure it takes effect
+    setTimeout(forceHideModal, 0);
     
     let board = new Board();
     let selectedPiece = null;
@@ -42,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let x = 0; x < 8; x++) {
             for (let y = 0; y < 8; y++) {
                 const squareElement = document.querySelector(`.square[data-x="${x}"][data-y="${y}"]`);
+                if (!squareElement) continue; // Skip if element not found
+                
                 const piece = board.squares[x][y];
                 
                 // Clear the square content
@@ -65,18 +87,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // If a piece is selected, highlight it and its possible moves
         if (selectedPiece) {
             const selectedSquare = document.querySelector(`.square[data-x="${selectedPiece.position.x}"][data-y="${selectedPiece.position.y}"]`);
-            selectedSquare.classList.add('selected');
-            
-            // Highlight possible moves
-            const legalMoves = selectedPiece.getLegalMoves();
-            legalMoves.forEach(move => {
-                const moveSquare = document.querySelector(`.square[data-x="${move.x}"][data-y="${move.y}"]`);
-                if (board.squares[move.x][move.y]) {
-                    moveSquare.classList.add('possible-capture');
-                } else {
-                    moveSquare.classList.add('possible-move');
-                }
-            });
+            if (selectedSquare) {
+                selectedSquare.classList.add('selected');
+                
+                // Highlight possible moves
+                const legalMoves = selectedPiece.getLegalMoves();
+                legalMoves.forEach(move => {
+                    const moveSquare = document.querySelector(`.square[data-x="${move.x}"][data-y="${move.y}"]`);
+                    if (moveSquare) {
+                        if (board.squares[move.x][move.y]) {
+                            moveSquare.classList.add('possible-capture');
+                        } else {
+                            moveSquare.classList.add('possible-move');
+                        }
+                    }
+                });
+            }
         }
     }
     
@@ -95,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         statusElement.textContent = statusText;
 
-        if (playAgainstAI && status.state === 'active' && status.currentPlayer === aiPlayer.color) {
+        if (playAgainstAI && status.state === 'active' && status.currentPlayer === aiPlayer.aiColor) {
             setTimeout(() => aiPlayer.makeMove(), 500);
         }
     }
@@ -153,21 +179,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show promotion options
     function showPromotionOptions(from, to) {
         pendingPromotion = {from, to};
-        promotionModal.classList.remove('hidden');
-        
-        // Set up promotion piece click listeners
-        document.querySelectorAll('.promotion-piece').forEach(piece => {
-            piece.onclick = () => {
-                const promotionType = piece.dataset.piece;
-                executeMove(pendingPromotion.from, pendingPromotion.to, promotionType);
-                hidePromotionModal();
-            };
-        });
+        if (promotionModal) {
+            promotionModal.classList.remove('hidden');
+            promotionModal.style.display = 'flex';  // Use flex to center the content
+            
+            // Set up promotion piece click listeners
+            document.querySelectorAll('.promotion-piece').forEach(piece => {
+                piece.onclick = () => {
+                    const promotionType = piece.dataset.piece;
+                    executeMove(pendingPromotion.from, pendingPromotion.to, promotionType);
+                    hidePromotionModal();
+                };
+            });
+        }
     }
     
     // Hide promotion modal
     function hidePromotionModal() {
-        promotionModal.classList.add('hidden');
+        if (promotionModal) {
+            promotionModal.classList.add('hidden');
+            promotionModal.style.display = 'none';
+        }
         pendingPromotion = null;
     }
     
@@ -205,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         aiToggle.checked = playAgainstAI;
         aiToggle.addEventListener('change', () => {
             playAgainstAI = aiToggle.checked;
-            if (playAgainstAI && board.currentPlayer === 'black') {
+            if (playAgainstAI && board.currentPlayer === aiPlayer.aiColor) {
                 aiPlayer.makeMove();
             }
         });
@@ -250,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         colorSelect.appendChild(whiteOption);
         colorSelect.appendChild(blackOption);
-        colorSelect.value = aiPlayer.color;
+        colorSelect.value = aiPlayer.aiColor;
 
         colorSelect.addEventListener('change', () => {
             aiPlayer.setAIColor(colorSelect.value);
@@ -271,15 +303,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset game
     resetButton.addEventListener('click', () => {
         board = new Board();
+        aiPlayer = new StockfishAI(board);
         selectedPiece = null;
         pendingPromotion = null;
+        
+        // Make sure modal is hidden on reset
         hidePromotionModal();
+        
         initializeBoard();
+        addAIControls();
     });
     
+    // Make sure pendingPromotion is null on startup
+    pendingPromotion = null;
+    
+    // Hide the promotion modal at startup
+    hidePromotionModal();
+    
     // Initialize the game
-    initializeBoard();
-    addAIControls();
+    try {
+        initializeBoard();
+        addAIControls();
+        // One more check after everything is set up
+        setTimeout(hidePromotionModal, 100);
+    } catch (error) {
+        console.error("Error initializing chess game:", error);
+    }
 });
-
-//test

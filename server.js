@@ -1,4 +1,4 @@
-//node serveur.js
+//node server.js
 //http://localhost:8080/
 
 const http = require('http');
@@ -11,29 +11,34 @@ const mimeTypes = {
     '.html': 'text/html',
     '.css': 'text/css',
     '.js': 'text/javascript',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpg',
+    '.gif': 'image/gif',
 };
 
 const requestHandler = (request, response) => {
     console.log(request.url)
-    let filPath = './index' + request.url 
+    let filePath = '.' + request.url; // Fixed filPath to filePath
 
     if (request.url === '/') {
-        filPath = './index/service.html/menu.html'
+        filePath = './index.html'
     }
 
-    fs.readFile(filPath, (err, data) => {
+    const extname = String(path.extname(filePath)).toLowerCase()
+    const contentType = mimeTypes[extname] || 'application/octet-stream' // Added const
+
+    fs.readFile(filePath, (err, data) => {
         if (err) {
             console.log(err)
             response.writeHead(404, { 'Content-Type': 'text/html' })
             return response.end('404 Not Found')
         }
-        const extname = String(path.extname(filPath)).toLowerCase()
-        const contentType = mimeTypes[extname] || 'application/octet-stream'
+        // Removed duplicate extension check
         response.writeHead(200, { 'Content-Type': contentType })
         response.end(data, 'utf-8')
     })
 }
-
 
 const server = http.createServer(requestHandler);
 

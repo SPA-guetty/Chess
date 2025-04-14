@@ -11,6 +11,13 @@
 <body>
     <h1>Chess of destruction</h1>
     <h2>Menu</h2>
+    <div id="clock1">00:00</div>
+    <div id="clock2">00:00</div>
+    <div class="mt-3">
+        <button id="plrtime1" class="btn btn-primary">Player 1</button>
+        <button id="plrtime2" class="btn btn-primary">Player 2</button>
+        <button id="stop" class="btn btn-danger">Stop</button>
+    </div>
     <ul>
         <div>
             <li>
@@ -40,3 +47,60 @@
 </footer>
 
 </html>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let timer;
+        let minutes1 = 0;
+        let seconds1 = 0;
+        let minutes2 = 0;
+        let seconds2 = 0;
+        let running1 = false;
+        let running2 = false;
+
+        function displayTime() {
+            document.getElementById("clock1").textContent =
+                `${minutes1.toString().padStart(2, '0')}:${seconds1.toString().padStart(2, '0')}`;
+            
+            document.getElementById("clock2").textContent =
+                `${minutes2.toString().padStart(2, '0')}:${seconds2.toString().padStart(2, '0')}`;
+        }
+
+        function startplr1() {
+            running1 = true;
+            running2 = false;
+        }
+
+        function startplr2() {
+            running1 = false;
+            running2 = true;
+        }
+
+        function stopTimer() {
+            running1 = false;
+            running2 = false;
+        }
+
+        timer = setInterval(() => {
+            if (running1) {
+                seconds1++;
+                if (seconds1 === 60) {
+                    seconds1 = 0;
+                    minutes1++;
+                }
+                displayTime();
+            } else if (running2) {
+                seconds2++;
+                if (seconds2 === 60) {
+                    seconds2 = 0;
+                    minutes2++;
+                }
+                displayTime();
+            }
+        }, 1000);
+
+        document.getElementById("plrtime1").addEventListener("click", startplr1);
+        document.getElementById("plrtime2").addEventListener("click", startplr2);
+        document.getElementById("stop").addEventListener("click", stopTimer)
+    });
+</script>

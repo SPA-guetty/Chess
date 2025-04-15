@@ -14,7 +14,34 @@
             <li><a href="/service.html/contact.html">Contact</a></li>
         </ul>
 
-        <script src="../script/game.js"></script>
+        <div class="container">
+            <h1>Chess Game</h1>
+            <div id="game-status">Current player: White</div>
+            <div id="chessboard"></div>
+
+            <div id="promotion-modal" class="hidden">
+                <div class="promotion-options">
+                    <div class="promotion-piece" data-piece="queen">♛</div>
+                    <div class="promotion-piece" data-piece="rook">♜</div>
+                    <div class="promotion-piece" data-piece="bishop">♝</div>
+                    <div class="promotion-piece" data-piece="knight">♞</div>
+                </div>
+            </div>
+
+            <button id="reset-button">Reset Game</button>
+        </div>
+
+        <script src="piece.js"></script>
+        <script src="pawn.js"></script>
+        <script src="rook.js"></script>
+        <script src="knight.js"></script>
+        <script src="bishop.js"></script>
+        <script src="queen.js"></script>
+        <script src="king.js"></script>
+        <script src="board.js"></script>
+        <script src="Stockfish.js"></script>
+
+        <script src="game.js"></script>
     </body>
     <footer>
         <p>Site porjet Java script écolé ynov 2025 </p>

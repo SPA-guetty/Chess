@@ -7,6 +7,7 @@ class Board {
         this.moveHistory = [];
         this.gameState = 'active'; // active, check, checkmate, stalemate
         this.checkState = {white: false, black: false};
+        this.lastMove = null;
         this.initializePieces();
     }
 
@@ -126,15 +127,18 @@ class Board {
             piece.hasMoved = true;
         }
 
-        // Update the move history
-        this.moveHistory.push({
+        // Update the move history and track last move
+        const moveData = {
             from,
             to,
             piece: piece.type,
             color: piece.color,
             captured: this.getPiece(to)?.type,
             promotion: promotionType,
-        });
+        };
+        
+        this.moveHistory.push(moveData);
+        this.lastMove = moveData;  // Add this line
 
         // Check for check
         this.updateCheckState();

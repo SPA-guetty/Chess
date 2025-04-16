@@ -8,10 +8,21 @@ class Piece {
     }
 
     getLegalMoves() {
-        const possibleMoves = this.getPossibleMoves();
-        return possibleMoves.filter(move =>
-            !this.board.wouldMoveCauseCheck(this.position, move, this.color)
-        );
+        // Get moves that are physically possible
+        let possibleMoves = this.getPossibleMoves();
+        console.log(`${this.color} ${this.type} at (${this.position.x},${this.position.y}) has ${possibleMoves.length} possible moves`);
+        
+        // Filter out moves that would leave the king in check
+        const legalMoves = possibleMoves.filter(move => {
+            const wouldCauseCheck = this.board.wouldMoveCauseCheck(this.position, move, this.color);
+            if (wouldCauseCheck) {
+                console.log(`Move to (${move.x},${move.y}) would leave king in check`);
+            }
+            return !wouldCauseCheck;
+        });
+        
+        console.log(`${this.color} ${this.type} at (${this.position.x},${this.position.y}) has ${legalMoves.length} legal moves`);
+        return legalMoves;
     }
 
     getPossibleMoves() {

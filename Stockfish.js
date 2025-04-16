@@ -92,22 +92,25 @@ class StockfishAI {
 
         try {
             const fen = this.boardToFEN();
-            console.log("Generated FEN:", fen);
-            
-            const bestMove = await this.getBestMove(fen).catch(error => {
+            let bestMove;
+
+            try {
+                bestMove = await this.getBestMove(fen);
+                console.log("Stockfish API returned a move:", bestMove);
+            } catch (error) {
                 console.warn("API failed, using local move fallback:", error);
-                return this.getLocalBestMove();
-            });
+                bestMove = this.getLocalBestMove();
+                console.log("Local fallback chose move:", bestMove);
+            }
 
             if (bestMove) {
-                // Check if bestMove is a string (from API) or an object (from local fallback)
-                if (typeof bestMove === 'string') {
-                    // Handle API response (e.g. "e2e4")
-                    const from = this.algebraicToCoords(bestMove.substring(0, 2));
-                    const to = this.algebraicToCoords(bestMove.substring(2, 4));
+                let from, to, promotionType = null;
 
-                    // Check for promotion
-                    let promotionType = null;
+                if (typeof bestMove === 'string') {
+                    // API move in algebraic notation (e.g. "e2e4")
+                    from = this.algebraicToCoords(bestMove.substring(0, 2));
+                    to = this.algebraicToCoords(bestMove.substring(2, 4));
+
                     if (bestMove.length > 4) {
                         const promotionChar = bestMove[4].toLowerCase();
                         if (promotionChar === 'q') promotionType = 'queen';
@@ -115,13 +118,16 @@ class StockfishAI {
                         else if (promotionChar === 'b') promotionType = 'bishop';
                         else if (promotionChar === 'n') promotionType = 'knight';
                     }
-                    
-                    console.log(`AI moved: ${bestMove}`);
-                    this.board.movePiece(from, to, promotionType);
                 } else {
-                    // Handle local fallback move (object with from/to properties)
-                    console.log(`AI moved: ${JSON.stringify(bestMove.from)} to ${JSON.stringify(bestMove.to)}`);
-                    this.board.movePiece(bestMove.from, bestMove.to);
+                    // Local fallback move (object with from/to)
+                    from = bestMove.from;
+                    to = bestMove.to;
+                }
+                
+                console.log(`AI moved: ${JSON.stringify(from)} to ${JSON.stringify(to)}`);
+                const success = this.board.movePiece(from, to, promotionType);
+                if (!success) {
+                    console.error("AI move failed!");
                 }
             }
         } catch (error) {

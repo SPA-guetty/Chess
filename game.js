@@ -116,6 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (status.state === 'check') {
             statusText += ' (Check)';
+            console.log("DEBUG: King in check, analyzing moves");
+            debugKingMoves();
         } else if (status.state === 'checkmate') {
             const winner = status.currentPlayer === 'white' ? 'Black' : 'White';
             statusText = `Checkmate! ${status.currentPlayer === 'white' ? 'Black' : 'White'} wins!`;
@@ -157,6 +159,51 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Is in check: ${board.checkState[currentColor]}`);
         console.log(`Game state: ${board.gameState}`);
     }
+
+    function debugKingMoves() {
+        const kingColor = board.currentPlayer;
+        const king = board.pieces.find(p => p instanceof King && p.color === kingColor);
+        
+        if (!king) {
+            console.error("King not found!");
+            return;
+        }
+        
+        console.log(`King at (${king.position.x},${king.position.y})`);
+        
+        // Check all 8 possible directions
+        const directions = [
+            {x: -1, y: -1}, {x: -1, y: 0}, {x: -1, y: 1},
+            {x: 0, y: -1},                 {x: 0, y: 1},
+            {x: 1, y: -1},  {x: 1, y: 0},  {x: 1, y: 1}
+        ];
+        
+        directions.forEach(dir => {
+            const targetPos = {
+                x: king.position.x + dir.x,
+                y: king.position.y + dir.y
+            };
+            
+            if (!board.isPositionValid(targetPos)) {
+                console.log(`Position (${targetPos.x},${targetPos.y}) is off the board`);
+                return;
+            }
+            
+            const targetPiece = board.squares[targetPos.x][targetPos.y];
+            if (targetPiece && targetPiece.color === kingColor) {
+                console.log(`Position (${targetPos.x},${targetPos.y}) is occupied by own piece`);
+                return;
+            }
+            
+            // Check if the position is under attack
+            const isUnderAttack = board.isPositionUnderAttack(
+                targetPos, 
+                kingColor === 'white' ? 'black' : 'white'
+            );
+            
+            console.log(`Position (${targetPos.x},${targetPos.y}): ${isUnderAttack ? 'Under Attack' : 'Safe'}`);
+        });
+    }
     
     // Handle square click
     function handleSquareClick(x, y) {
@@ -166,18 +213,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const clickedPiece = board.squares[x][y];
         
-        // If no piece is selected, select one if it belongs to current player
+        // If no piece is selected yet
         if (!selectedPiece) {
+            // Only select pieces of the current player's color
             if (clickedPiece && clickedPiece.color === board.currentPlayer) {
                 selectedPiece = clickedPiece;
+                console.log(`Selected ${clickedPiece.type} at (${x},${y})`);
+                // Log legal moves for debugging
+                const legalMoves = selectedPiece.getLegalMoves();
+                console.log(`Legal moves:`, legalMoves);
                 updateBoardUI();
             }
             return;
         }
         
-        // If the clicked square contains a piece of the same color, select it instead
+        // If a piece is already selected
+        
+        // If clicking on another piece of the same color, select it instead
         if (clickedPiece && clickedPiece.color === selectedPiece.color) {
             selectedPiece = clickedPiece;
+            console.log(`Selected ${clickedPiece.type} at (${x},${y})`);
+            // Log legal moves for debugging
+            const legalMoves = selectedPiece.getLegalMoves();
+            console.log(`Legal moves:`, legalMoves);
             updateBoardUI();
             return;
         }
@@ -185,9 +243,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Attempt to move the selected piece
         const legalMoves = selectedPiece.getLegalMoves();
         const isLegalMove = legalMoves.some(move => move.x === x && move.y === y);
+        
+        console.log(`Attempting move to (${x},${y}), legal: ${isLegalMove}`);
+        
         if (isLegalMove) {
             // Check if this is a promotion move
-            if (selectedPiece instanceof Pawn && (y === 0 || y === 7)) {
+            if (selectedPiece instanceof Pawn && (x === 0 || x === 7)) {
                 showPromotionOptions(selectedPiece.position, {x, y});
             } else {
                 executeMove(selectedPiece.position, {x, y});

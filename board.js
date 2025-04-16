@@ -128,7 +128,7 @@ class Board {
         }
 
         // Check if the move is a promotion
-        if (piece instanceof Pawn && (to.y === 0 || to.y === 7)) {
+        if (piece instanceof Pawn && (to.x === 0 || to.x === 7)) {
             if (promotionType) {
                 const promotedPiece = this.createPromotedPiece(promotionType, piece.color, to);
                 this.squares[to.x][to.y] = promotedPiece;

@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status.state === 'check') {
             statusText += ' (Check)';
         } else if (status.state === 'checkmate') {
+            const winner = status.currentPlayer === 'white' ? 'Black' : 'White';
             statusText = `Checkmate! ${status.currentPlayer === 'white' ? 'Black' : 'White'} wins!`;
             showGameEndModal(`${winner} wins by checkmate!`);
         } else if (status.state === 'stalemate') {
@@ -129,15 +130,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (playAgainstAI && status.state === 'active' && status.currentPlayer === aiPlayer.aiColor) {
             setTimeout(() => aiPlayer.makeMove(), 500);
         }
+        debugMoves();
+    }
+
+    function debugMoves() {
+        const currentColor = board.currentPlayer;
+        console.log(`Debug: checking moves for ${currentColor}`);
+
+        let totalMoves = 0;
+        // Only loop through pieces that are actually on the board
+        board.pieces.filter(piece => {
+            // Make sure the piece is still on the board
+            const isOnBoard = board.squares[piece.position.x][piece.position.y] === piece;
+            return piece.color === currentColor && isOnBoard;
+        }).forEach(piece => {
+            try {
+                const moves = piece.getLegalMoves();
+                totalMoves += moves.length;
+                console.log(`Piece: ${piece.type} at (${piece.position.x}, ${piece.position.y}) can move to:`, moves);
+            } catch (error) {
+                console.warn(`Error getting moves for ${piece.type} at (${piece.position.x}, ${piece.position.y})`, error);
+            }
+        });
+
+        console.log(`Total legal moves: ${totalMoves}`);
+        console.log(`Is in check: ${board.checkState[currentColor]}`);
+        console.log(`Game state: ${board.gameState}`);
     }
     
     // Handle square click
     function handleSquareClick(x, y) {
         if (!board) return; // Ensure board is initialized
-
-        if (!board.squares[x][y]) return; // Ignore clicks on empty squares
         if (board.gameState !== 'active') return; // Ignore clicks if game is not active
-
         if (pendingPromotion) return; // Don't allow moves during promotion
         
         const clickedPiece = board.squares[x][y];
@@ -163,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isLegalMove = legalMoves.some(move => move.x === x && move.y === y);
         if (isLegalMove) {
             // Check if this is a promotion move
-            if (selectedPiece instanceof Pawn && (y === 0 || y === 7)) {
+            if (selectedPiece instanceof Pawn && (x === 0 || x === 7)) {
                 showPromotionOptions(selectedPiece.position, {x, y});
             } else {
                 executeMove(selectedPiece.position, {x, y});
@@ -343,7 +367,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    function hideGameEndModal() {
+        const existingModal = document.getElementById('game-end-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+    }
+
     function resetGame() {
+        hideGameEndModal();
         board = new Board();
         aiPlayer = new StockfishAI(board);
         selectedPiece = null;
@@ -361,6 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Hide the promotion modal at startup
     hidePromotionModal();
+    hideGameEndModal();
     
     // Initialize the game
     try {

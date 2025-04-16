@@ -88,30 +88,46 @@ class StockfishAI {
         if (this.board.currentPlayer !== this.aiColor || this.isThinking) return;
 
         this.isThinking = true;
+        console.log("AI is thinking...");
 
         try {
             const fen = this.boardToFEN();
-            const bestMove = await this.getBestMove(fen);
+            console.log("Generated FEN:", fen);
+            
+            const bestMove = await this.getBestMove(fen).catch(error => {
+                console.warn("API failed, using local move fallback:", error);
+                return this.getLocalBestMove();
+            });
 
             if (bestMove) {
-                const from = this.algebraicToCoords(bestMove.substring(0, 2));
-                const to = this.algebraicToCoords(bestMove.substring(2, 4));
+                // Check if bestMove is a string (from API) or an object (from local fallback)
+                if (typeof bestMove === 'string') {
+                    // Handle API response (e.g. "e2e4")
+                    const from = this.algebraicToCoords(bestMove.substring(0, 2));
+                    const to = this.algebraicToCoords(bestMove.substring(2, 4));
 
-                // Check for promotion
-                let promotionType = null;
-                if (bestMove.length > 4) {
-                    const promotionChar = bestMove[4].toLowerCase();
-                    if (promotionChar === 'q') promotionType = 'queen';
-                    else if (promotionChar === 'r') promotionType = 'rook';
-                    else if (promotionChar === 'b') promotionType = 'bishop';
-                    else if (promotionChar === 'n') promotionType = 'knight';
+                    // Check for promotion
+                    let promotionType = null;
+                    if (bestMove.length > 4) {
+                        const promotionChar = bestMove[4].toLowerCase();
+                        if (promotionChar === 'q') promotionType = 'queen';
+                        else if (promotionChar === 'r') promotionType = 'rook';
+                        else if (promotionChar === 'b') promotionType = 'bishop';
+                        else if (promotionChar === 'n') promotionType = 'knight';
+                    }
+                    
+                    console.log(`AI moved: ${bestMove}`);
+                    this.board.movePiece(from, to, promotionType);
+                } else {
+                    // Handle local fallback move (object with from/to properties)
+                    console.log(`AI moved: ${JSON.stringify(bestMove.from)} to ${JSON.stringify(bestMove.to)}`);
+                    this.board.movePiece(bestMove.from, bestMove.to);
                 }
-                this.board.movePiece(from, to, promotionType);
-                console.log(`AI moved: ${bestMove}`);
             }
         } catch (error) {
             console.error('Error making AI move:', error);
         }
+
         this.isThinking = false;
     }
 
@@ -159,5 +175,62 @@ class StockfishAI {
         if (this.board.currentPlayer === this.aiColor) {
             this.makeMove();
         }
+    }
+
+    getLocalBestMove() {
+        const aiPieces = this.board.pieces.filter(piece => piece.color === this.aiColor);
+        let allMoves = [];
+        for (const piece of aiPieces) {
+            const pieceMoves = piece.getLegalMoves();
+            for (const move of pieceMoves) {
+                allMoves.push({
+                    from: piece.position,
+                    to: move,
+                    piece: piece,
+                });
+            }
+        }
+
+        if (allMoves.length === 0) return null; // No moves available
+
+        // Choose a semi-random move
+
+        // check for captures
+        const captures = allMoves.filter(move =>
+            this.board.squares[move.to.x][move.to.y] !== null
+        );
+
+        if (captures.length > 0) {
+            captures.sort((a, b) => {
+                const pieceValues = {
+                    'pawn': 1,
+                    'knight': 3,
+                    'bishop': 3,
+                    'rook': 5,
+                    'queen': 9,
+                    'king': 100
+                };
+
+                const aValue = this.board.squares[a.to.x][a.to.y] ?
+                    pieceValues[this.board.squares[a.to.x][a.to.y].type] : 0;
+                const bValue = this.board.squares[b.to.x][b.to.y] ?
+                    pieceValues[this.board.squares[b.to.x][b.to.y].type] : 0;
+                return bValue - aValue;
+            });
+
+            return captures[0];
+        }
+
+        // Check for promotions
+        const promotions = allMoves.filter(move => 
+            move.piece instanceof Pawn && (move.to.x === 0 || move.to.x === 7)
+        );
+        if (promotions.length > 0) {
+            return promotions[0];
+        }
+
+        // If no captures or promotions, return a random move
+        const randomIndex = Math.floor(Math.random() * allMoves.length);
+        return allMoves[randomIndex];
     }
 }

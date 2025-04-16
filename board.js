@@ -9,6 +9,8 @@ class Board {
         this.checkState = {white: false, black: false};
         this.lastMove = null;
         this.initializePieces();
+        this.updateCheckState();
+        this.updateGameState();
     }
 
     createEmptyBoard() {
@@ -117,7 +119,13 @@ class Board {
         const needsPromotion = piece instanceof Pawn && (to.y === 0 || to.y === 7) && !promotionType;
 
         // Moving the piece
+        const originalToPiece = this.squares[to.x][to.y];
         this.squares[from.x][from.y] = null;
+
+        // Check for capture and remove from pieces array
+        if (originalToPiece) {
+            this.pieces = this.pieces.filter(p => p !== originalToPiece);
+        }
 
         // Check if the move is a promotion
         if (piece instanceof Pawn && (to.y === 0 || to.y === 7)) {
@@ -188,12 +196,16 @@ class Board {
         if (!position) return false;
         return this.pieces.some(piece => {
             if (piece.color !== byColor) return false;
+            
             if (piece instanceof Pawn) {
                 const direction = piece.color === 'white' ? 1 : -1;
-                return (Math.abs(piece.position.y - position.y) === 1 &&
-                    (piece.position.x + direction === position.x));
+                return (position.y - piece.position.y === direction) && 
+                       Math.abs(position.x - piece.position.x) === 1;
             }
-            return piece.getPossibleMoves().some(move => move.x === position.x && move.y === position.y);
+            
+            return piece.getPossibleMoves().some(move => 
+                move.x === position.x && move.y === position.y
+            );
         });
     }
 
@@ -224,8 +236,10 @@ class Board {
     }
 
     wouldMoveCauseCheck(from, to, color) {
-        // Simulates a move
+        // Simulates a move to check if it would cause check
         const originalFromPiece = this.squares[from.x][from.y];
+        if (!originalFromPiece) return false;
+        
         const originalToPiece = this.squares[to.x][to.y];
         
         // Store original position for restoration
@@ -235,18 +249,77 @@ class Board {
         this.squares[from.x][from.y] = null;
         this.squares[to.x][to.y] = originalFromPiece;
         originalFromPiece.position = {...to};
+        
+        // For en passant captures, also remove the captured pawn temporarily
+        let capturedPawnPosition = null;
+        if (originalFromPiece instanceof Pawn && 
+            Math.abs(from.y - to.y) === 1 && 
+            !originalToPiece) {
+            capturedPawnPosition = {x: to.x, y: from.y};
+            const capturedPawn = this.squares[capturedPawnPosition.x][capturedPawnPosition.y];
+            if (capturedPawn instanceof Pawn) {
+                this.squares[capturedPawnPosition.x][capturedPawnPosition.y] = null;
+            } else {
+                capturedPawnPosition = null;
+            }
+        }
 
-        // Check if the king of the moving color is in check
-        const kingPosition = color === originalFromPiece.color && originalFromPiece instanceof King 
-            ? to 
-            : this.pieces.find(p => p instanceof King && p.color === color)?.position;
+        // Determine king position after the move
+        let kingPosition;
+        if (originalFromPiece instanceof King && originalFromPiece.color === color) {
+            kingPosition = {...to};
+        } else {
+            const king = this.pieces.find(p => p instanceof King && p.color === color);
+            kingPosition = king ? {...king.position} : null;
+        }
+
+        let isInCheck = false;
+        if (kingPosition) {
+            // Check if any opponent piece can attack the king's position
+            const opponentColor = color === 'white' ? 'black' : 'white';
             
-        const isInCheck = kingPosition ? this.isPositionUnderAttack(kingPosition, color === 'white' ? 'black' : 'white') : false;
+            // Important: We need to check each piece individually without using getLegalMoves
+            // to avoid infinite recursion
+            isInCheck = this.pieces.some(piece => {
+                if (piece.color !== opponentColor) return false;
+                if (piece === originalToPiece) return false; // This piece is captured by the move
+                
+                // For pawns, check diagonal attacking directions only
+                if (piece instanceof Pawn) {
+                    const dir = piece.color === 'white' ? 1 : -1;
+                    const attacks = [
+                        {x: piece.position.x + 1, y: piece.position.y + dir},
+                        {x: piece.position.x - 1, y: piece.position.y + dir}
+                    ];
+                    return attacks.some(attack => 
+                        attack.x === kingPosition.x && 
+                        attack.y === kingPosition.y
+                    );
+                }
+                
+                // For other pieces, check possible moves directly
+                return piece.getPossibleMoves().some(move => 
+                    move.x === kingPosition.x && 
+                    move.y === kingPosition.y
+                );
+            });
+        }
 
         // Restore board state
         this.squares[from.x][from.y] = originalFromPiece;
         this.squares[to.x][to.y] = originalToPiece;
         originalFromPiece.position = originalPosition;
+        
+        // Restore captured pawn if needed
+        if (capturedPawnPosition) {
+            this.squares[capturedPawnPosition.x][capturedPawnPosition.y] = 
+                this.pieces.find(p => 
+                    p instanceof Pawn && 
+                    p.color !== color && 
+                    p.position.x === capturedPawnPosition.x && 
+                    p.position.y === capturedPawnPosition.y
+                );
+        }
 
         return isInCheck;
     }

@@ -110,6 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateGameStatus() {
         const status = board.getGameStatus();
         let statusText = `Current player: ${status.currentPlayer.charAt(0).toUpperCase() + status.currentPlayer.slice(1)}`;
+
+        const audio = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3');
+        audio.play();
         
         if (status.state === 'check') {
             statusText += ' (Check)';

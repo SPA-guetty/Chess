@@ -182,6 +182,12 @@ h1 {
     z-index: 20;
 }
 
+.board-timers {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 .modal-content {
     background-color: white;
     padding: 20px 30px;

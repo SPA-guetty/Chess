@@ -10,7 +10,11 @@
         <div class="container">
             <h1>Chess Game</h1>
             <div id="game-status">Current player: White</div>
-            <div id="chessboard"></div>
+            <div class="board-timers">
+                <div id="clock1">00:00</div>
+                <div id="chessboard"></div>
+                <div id="clock2">00:00</div>
+            </div>
 
             <div id="promotion-modal" class="hidden">
                 <div class="promotion-options">
@@ -36,5 +40,40 @@
         <script src="Stockfish.js"></script>
 
         <script src="game.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                let timer;
+                let minutes1 = 0;
+                let seconds1 = 0;
+                let minutes2 = 0;
+                let seconds2 = 0;
+
+                function displayTime() {
+                    document.getElementById("clock1").textContent =
+                        `${minutes1.toString().padStart(2, '0')}:${seconds1.toString().padStart(2, '0')}`;
+                    
+                    document.getElementById("clock2").textContent =
+                        `${minutes2.toString().padStart(2, '0')}:${seconds2.toString().padStart(2, '0')}`;
+                }
+
+                timer = setInterval(() => {
+                    if (document.getElementById("game-status").textContent.includes("White")) {
+                        seconds1++;
+                        if (seconds1 === 60) {
+                            seconds1 = 0;
+                            minutes1++;
+                        }
+                        displayTime();
+                    } else if (document.getElementById("game-status").textContent.includes("Black")) {
+                        seconds2++;
+                        if (seconds2 === 60) {
+                            seconds2 = 0;
+                            minutes2++;
+                        }
+                        displayTime();
+                    }
+                }, 1000);
+            });
+        </script>
     </body>
 </html>

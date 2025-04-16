@@ -151,10 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Attempt to move the selected piece
         const legalMoves = selectedPiece.getLegalMoves();
         const isLegalMove = legalMoves.some(move => move.x === x && move.y === y);
-        
         if (isLegalMove) {
             // Check if this is a promotion move
-            if (selectedPiece instanceof Pawn && (x === 0 || x === 7)) {
+            if (selectedPiece instanceof Pawn && (y === 0 || y === 7)) {
                 showPromotionOptions(selectedPiece.position, {x, y});
             } else {
                 executeMove(selectedPiece.position, {x, y});

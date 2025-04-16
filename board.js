@@ -49,6 +49,7 @@ class Board {
             this.pieces.push(new Pawn('black', {x: i, y: 6}, this));
         }
 
+
         // Place pieces on the board
         this.pieces.forEach(piece => {
             this.squares[piece.position.x][piece.position.y] = piece;
@@ -116,7 +117,7 @@ class Board {
         this.squares[from.x][from.y] = null;
 
         // Check if the move is a promotion
-        if (piece instanceof Pawn && (to.x === 0 || to.x === 7)) {
+        if (piece instanceof Pawn && (to.y === 0 || to.y === 7)) {
             const promotedPiece = this.createPromotedPiece(promotionType || 'queen', piece.color, to);
             this.squares[to.x][to.y] = promotedPiece;
             this.pieces = this.pieces.filter(p => p !== piece);

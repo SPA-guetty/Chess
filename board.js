@@ -113,15 +113,24 @@ class Board {
             rook.hasMoved = true;
         }
 
+        // Store if this move needs promotion
+        const needsPromotion = piece instanceof Pawn && (to.y === 0 || to.y === 7) && !promotionType;
+
         // Moving the piece
         this.squares[from.x][from.y] = null;
 
         // Check if the move is a promotion
         if (piece instanceof Pawn && (to.y === 0 || to.y === 7)) {
-            const promotedPiece = this.createPromotedPiece(promotionType || 'queen', piece.color, to);
-            this.squares[to.x][to.y] = promotedPiece;
-            this.pieces = this.pieces.filter(p => p !== piece);
-            this.pieces.push(promotedPiece);
+            if (promotionType) {
+                const promotedPiece = this.createPromotedPiece(promotionType, piece.color, to);
+                this.squares[to.x][to.y] = promotedPiece;
+                this.pieces = this.pieces.filter(p => p !== piece);
+                this.pieces.push(promotedPiece);
+            } else {
+                // If no promotion type is specified yet, put the pawn back temporarily
+                this.squares[to.x][to.y] = piece;
+                piece.position = to;
+            }
         } else {
             this.squares[to.x][to.y] = piece;
             piece.position = to;
@@ -139,16 +148,19 @@ class Board {
         };
         
         this.moveHistory.push(moveData);
-        this.lastMove = moveData;  // Add this line
+        this.lastMove = moveData;
 
         // Check for check
         this.updateCheckState();
 
-        // Switch players
-        this.currentPlayer = this.currentPlayer === 'white' ? 'black' : 'white';
-
-        // Check game status
-        this.updateGameState();
+        // Only switch players if promotion is complete or not needed
+        if (!needsPromotion) {
+            // Switch players
+            this.currentPlayer = this.currentPlayer === 'white' ? 'black' : 'white';
+            
+            // Check game status
+            this.updateGameState();
+        }
 
         return true;
     }
@@ -245,5 +257,23 @@ class Board {
             currentPlayer: this.currentPlayer,
             check: this.checkState
         };
+    }
+}
+
+// filepath: /home/yolrin/chess/game.js
+// Update the executeMove function to handle promotions
+function executeMove(from, to, promotionType = null) {
+    const success = board.movePiece(from, to, promotionType);
+    if (success) {
+        selectedPiece = null;
+        
+        // If this was a pawn promotion completion, switch player turns now
+        if (promotionType) {
+            board.currentPlayer = board.currentPlayer === 'white' ? 'black' : 'white';
+            board.updateGameState();
+        }
+        
+        updateBoardUI();
+        updateGameStatus();
     }
 }

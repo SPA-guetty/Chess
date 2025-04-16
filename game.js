@@ -118,8 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
             statusText += ' (Check)';
         } else if (status.state === 'checkmate') {
             statusText = `Checkmate! ${status.currentPlayer === 'white' ? 'Black' : 'White'} wins!`;
+            showGameEndModal(`${winner} wins by checkmate!`);
         } else if (status.state === 'stalemate') {
             statusText = 'Stalemate! The game is a draw.';
+            showGameEndModal('Draw by stalemate!');
         }
         
         statusElement.textContent = statusText;
@@ -131,6 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Handle square click
     function handleSquareClick(x, y) {
+        if (!board) return; // Ensure board is initialized
+
+        if (!board.squares[x][y]) return; // Ignore clicks on empty squares
+        if (board.gameState !== 'active') return; // Ignore clicks if game is not active
+
         if (pendingPromotion) return; // Don't allow moves during promotion
         
         const clickedPiece = board.squares[x][y];
@@ -315,6 +322,39 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeBoard();
         addAIControls();
     });
+
+    function showGameEndModal(result) {
+        const modal = document.createElement('div');
+        modal.id = 'game-end-modal';
+        modal.classList.add('modal');
+
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2 id="end-result">${result}</h2>
+                <button id="new-game-button">New Game</button>
+            </div>
+            `;
+
+            document.querySelector('.container').appendChild(modal);
+
+            document.getElementById('new-game-button').addEventListener('click', () => {
+                resetGame();
+                modal.remove();
+            });
+    }
+
+    function resetGame() {
+        board = new Board();
+        aiPlayer = new StockfishAI(board);
+        selectedPiece = null;
+        pendingPromotion = null;
+        
+        // Make sure modal is hidden on reset
+        hidePromotionModal();
+        
+        initializeBoard();
+        addAIControls();
+    }
     
     // Make sure pendingPromotion is null on startup
     pendingPromotion = null;

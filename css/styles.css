@@ -112,9 +112,19 @@ h1 {
     border: 1px solid #ddd;
 }
 
+.piece.white {
+    background-color: #f0d9b500;
+}
+
+.piece.black {
+    background-color: #b5886300;
+}
+
 .promotion-piece:hover {
     background-color: #f0f0f0;
 }
+
+.class 
 
 .hidden {
     display: none !important;

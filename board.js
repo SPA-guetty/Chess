@@ -190,9 +190,13 @@ class Board {
         const opponentColor = currentColor === 'white' ? 'black' : 'white';
 
         // Check for any legal moves
-        const hasLegalMoves = this.pieces.some(piece =>
-            piece.color === currentColor && piece.getLegalMoves().length > 0
-        );
+        let hasLegalMoves = false;
+        for (const piece of this.pieces) {
+            if (piece.color === currentColor && piece.getLegalMoves().length > 0) {
+                hasLegalMoves = true;
+                break;
+            }
+        }
         
         if (!hasLegalMoves) {
             if (this.checkState[currentColor]) {

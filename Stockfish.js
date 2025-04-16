@@ -85,7 +85,9 @@ class StockfishAI {
     }
 
     async makeMove() {
-        if (this.board.currentPlayer !== this.aiColor || this.isThinking) return;
+        if (this.board.currentPlayer !== this.aiColor || this.isThinking) {
+            return Promise.resolve(false);
+        }
 
         this.isThinking = true;
         console.log("AI is thinking...");
@@ -95,11 +97,12 @@ class StockfishAI {
             let bestMove;
 
             try {
-                bestMove = await this.getBestMove(fen);
+                // Pass difficulty level to the API call
+                bestMove = await this.getBestMove(fen, this.skillLevel);
                 console.log("Stockfish API returned a move:", bestMove);
             } catch (error) {
                 console.warn("API failed, using local move fallback:", error);
-                bestMove = this.getLocalBestMove();
+                bestMove = this.getLocalBestMove(this.skillLevel);
                 console.log("Local fallback chose move:", bestMove);
             }
 
@@ -126,21 +129,21 @@ class StockfishAI {
                 
                 console.log(`AI moved: ${JSON.stringify(from)} to ${JSON.stringify(to)}`);
                 const success = this.board.movePiece(from, to, promotionType);
-                if (!success) {
-                    console.error("AI move failed!");
-                }
+                this.isThinking = false;
+                return Promise.resolve(success);
             }
         } catch (error) {
             console.error('Error making AI move:', error);
         }
 
         this.isThinking = false;
+        return Promise.resolve(false);
     }
 
-    async getBestMove(fen) {
+    async getBestMove(fen, skillLevel) {
         const requestData = new URLSearchParams({
             fen: fen,
-            depth: this.skillLevel,
+            depth: skillLevel,
             mode: 'bestmove',
         });
 
@@ -183,7 +186,7 @@ class StockfishAI {
         }
     }
 
-    getLocalBestMove() {
+    getLocalBestMove(skillLevel = 5) {
         const aiPieces = this.board.pieces.filter(piece => piece.color === this.aiColor);
         let allMoves = [];
         for (const piece of aiPieces) {
@@ -235,7 +238,14 @@ class StockfishAI {
             return promotions[0];
         }
 
-        // If no captures or promotions, return a random move
+        // Add some randomness based on skill level
+        const randomFactor = 11 - skillLevel; // Higher skill = lower randomness
+        if (Math.random() * 10 < randomFactor && allMoves.length > 1) {
+            const randomIndex = Math.floor(Math.random() * allMoves.length);
+            return allMoves[randomIndex];
+        }
+
+        // Otherwise return the best calculated move
         const randomIndex = Math.floor(Math.random() * allMoves.length);
         return allMoves[randomIndex];
     }

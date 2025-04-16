@@ -19,7 +19,7 @@ const mimeTypes = {
 
 const requestHandler = (request, response) => {
     console.log(request.url)
-    let filePath = '.' + request.url; // Fixed filPath to filePath
+    let filePath = '.' + request.url;
 
     if (request.url === '/') {
         filePath = './index.html'

@@ -16,12 +16,44 @@
                 <div id="clock2">00:00</div>
             </div>
 
-            <div id="promotion-modal" class="hidden">
+            <div id="promotion-modal" class="hidden" style="display: none !important; visibility: hidden !important;">
                 <div class="promotion-options">
                     <div class="promotion-piece" data-piece="queen">♛</div>
                     <div class="promotion-piece" data-piece="rook">♜</div>
                     <div class="promotion-piece" data-piece="bishop">♝</div>
                     <div class="promotion-piece" data-piece="knight">♞</div>
+                </div>
+            </div>
+
+            <div class="ai-controls">
+                <h3>AI Settings</h3>
+                <div class="control-group">
+                    <label for="ai-active">Play against AI:</label>
+                    <input type="checkbox" id="ai-active" checked>
+                </div>
+                
+                <div class="control-group">
+                    <label for="ai-color">AI plays as:</label>
+                    <select id="ai-color">
+                        <option value="black" selected>Black</option>
+                        <option value="white">White</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="ai-difficulty">Difficulty:</label>
+                    <input type="range" id="ai-difficulty" min="1" max="10" value="5">
+                    <span id="difficulty-value">5</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="ai-thinking-time">Thinking time (ms):</label>
+                    <select id="ai-thinking-time">
+                        <option value="100">Fast (100ms)</option>
+                        <option value="500" selected>Normal (500ms)</option>
+                        <option value="1000">Slow (1000ms)</option>
+                        <option value="2000">Deep (2000ms)</option>
+                    </select>
                 </div>
             </div>
 

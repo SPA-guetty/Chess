@@ -8,6 +8,7 @@ class Board {
         this.gameState = 'active'; // active, check, checkmate, stalemate
         this.checkState = {white: false, black: false};
         this.lastMove = null;
+        this.moveListeners = [];
         this.initializePieces();
         this.updateCheckState();
         this.updateGameState();
@@ -170,6 +171,9 @@ class Board {
             this.updateGameState();
         }
 
+        // Notify all listeners that a move was made
+        this.moveListeners.forEach(listener => listener(from, to));
+
         return true;
     }
 
@@ -294,6 +298,10 @@ class Board {
             currentPlayer: this.currentPlayer,
             check: this.checkState
         };
+    }
+
+    addMoveListener(callback) {
+        this.moveListeners.push(callback);
     }
 }
 

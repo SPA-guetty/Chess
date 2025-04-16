@@ -3,38 +3,88 @@ window.onerror = function(message, source, lineno, colno, error) {
     return false;
 };
 
+window.onload = function() {
+    // Hide the modal the moment the page loads (even before DOMContentLoaded)
+    const promotionModal = document.getElementById('promotion-modal');
+    if (promotionModal) {
+        promotionModal.style.display = 'none';
+        promotionModal.classList.add('hidden');
+        console.log('Modal hidden in window.onload');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOMContentLoaded event fired");
+    
     const boardElement = document.getElementById('chessboard');
+    console.log("Chessboard element:", boardElement);
+    
+    // Check if all required classes are loaded
+    console.log("Board class loaded:", typeof Board !== 'undefined');
+    console.log("Piece class loaded:", typeof Piece !== 'undefined');
+    console.log("King class loaded:", typeof King !== 'undefined');
+    console.log("Queen class loaded:", typeof Queen !== 'undefined');
+    console.log("Rook class loaded:", typeof Rook !== 'undefined');
+    console.log("Bishop class loaded:", typeof Bishop !== 'undefined');
+    console.log("Knight class loaded:", typeof Knight !== 'undefined');
+    console.log("Pawn class loaded:", typeof Pawn !== 'undefined');
+    
     const statusElement = document.getElementById('game-status');
     const resetButton = document.getElementById('reset-button');
     const promotionModal = document.getElementById('promotion-modal');
     
-    // Force hide the promotion modal with both class and inline style
-    function forceHideModal() {
-        if (promotionModal) {
-            promotionModal.classList.add('hidden');
-            promotionModal.style.display = 'none';
-            console.log('Modal hidden with force hide');
-        }
+    // Immediately hide the modal in multiple ways
+    if (promotionModal) {
+        // Use multiple techniques to force hide
+        promotionModal.classList.add('hidden');
+        promotionModal.style.display = 'none';
+        promotionModal.style.visibility = 'hidden';
+        promotionModal.style.opacity = '0';
+        promotionModal.style.pointerEvents = 'none';
+        promotionModal.style.position = 'absolute';
+        promotionModal.style.top = '-9999px';
+        promotionModal.style.left = '-9999px';
+        console.log('Modal aggressively hidden in DOMContentLoaded');
     }
-    
-    // Call it immediately
-    forceHideModal();
-    
-    // And again after a small delay to make sure it takes effect
-    setTimeout(forceHideModal, 0);
-    
+
+    const aiThinkingIndicator = document.createElement('div');
+    aiThinkingIndicator.id = 'ai-thinking';
+    aiThinkingIndicator.className = 'hidden';
+    aiThinkingIndicator.innerHTML = 'AI is thinking <span class="thinking-dots">...</span>';
+
+    const container = document.querySelector('.container');
+    if (container) {
+        container.appendChild(aiThinkingIndicator);
+    } else {
+        console.error("Container element not found");
+    }
+
     let board = new Board();
     let selectedPiece = null;
     let pendingPromotion = null;
     let aiPlayer = new StockfishAI(board);
     let playAgainstAI = true;
+
+    board.addMoveListener((from, to) => {
+        console.log(`Move listener triggered: (${from.x},${from.y}) to (${to.x},${to.y})`);
+        updateBoardUI();
+        
+        // Only update status if it's not a promotion awaiting selection
+        const piece = board.squares[to.x][to.y];
+        if (!(piece instanceof Pawn && (to.x === 0 || to.x === 7) && !pendingPromotion)) {
+            updateGameStatus();
+        }
+    });
     
     // Initialize the board UI
     function initializeBoard() {
+        console.log("Initializing board...");
+        const boardElement = document.getElementById('chessboard');
+        
+        // Clear existing content
         boardElement.innerHTML = '';
         
-        // Create board squares
+        // Create squares
         for (let x = 0; x < 8; x++) {
             for (let y = 0; y < 8; y++) {
                 const square = document.createElement('div');
@@ -42,47 +92,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 square.classList.add((x + y) % 2 === 0 ? 'white' : 'black');
                 square.dataset.x = x;
                 square.dataset.y = y;
-                square.addEventListener('click', () => handleSquareClick(x, y));
+                
+                // Add click handler
+                square.addEventListener('click', () => {
+                    handleSquareClick(x, y);
+                });
+                
                 boardElement.appendChild(square);
             }
         }
         
+        // Add pieces based on board state
         updateBoardUI();
-        updateGameStatus();
+        console.log("Board initialized");
     }
     
     // Update the visual representation of the board
     function updateBoardUI() {
-        // Clear possible moves indicators
-        document.querySelectorAll('.possible-move, .possible-capture, .selected, .check').forEach(el => {
-            el.classList.remove('possible-move', 'possible-capture', 'selected', 'check');
-        });
+        console.log("Updating board UI");
+        if (!board) return;
         
-        // Update pieces on board
-        for (let x = 0; x < 8; x++) {
-            for (let y = 0; y < 8; y++) {
-                const squareElement = document.querySelector(`.square[data-x="${x}"][data-y="${y}"]`);
-                if (!squareElement) continue; // Skip if element not found
+        // Clear existing piece elements
+        const squares = document.querySelectorAll('.square');
+        squares.forEach(square => {
+            // Remove previous styling
+            square.classList.remove('selected', 'possible-move', 'possible-capture', 'check');
+            
+            // Remove any existing piece
+            const existingPiece = square.querySelector('.piece');
+            if (existingPiece) {
+                square.removeChild(existingPiece);
+            }
+            
+            // Get position from data attributes
+            const x = parseInt(square.dataset.x);
+            const y = parseInt(square.dataset.y);
+            
+            // Add piece if one exists at this position
+            const piece = board.squares[x][y];
+            if (piece) {
+                const pieceElement = document.createElement('div');
+                pieceElement.classList.add('piece');
+                pieceElement.textContent = getPieceSymbol(piece);
+                pieceElement.style.color = piece.color;
+                square.appendChild(pieceElement);
                 
-                const piece = board.squares[x][y];
-                
-                // Clear the square content
-                squareElement.textContent = '';
-                
-                // Add piece if present
-                if (piece) {
-                    const pieceElement = document.createElement('div');
-                    pieceElement.classList.add('piece', piece.color);
-                    pieceElement.textContent = getPieceSymbol(piece);
-                    squareElement.appendChild(pieceElement);
-                    
-                    // Mark king in check
-                    if (piece instanceof King && board.checkState[piece.color]) {
-                        squareElement.classList.add('check');
-                    }
+                // Highlight king in check
+                if (piece instanceof King && board.checkState[piece.color]) {
+                    square.classList.add('check');
                 }
             }
-        }
+        });
         
         // If a piece is selected, highlight it and its possible moves
         if (selectedPiece) {
@@ -130,7 +190,25 @@ document.addEventListener('DOMContentLoaded', () => {
         statusElement.textContent = statusText;
 
         if (playAgainstAI && status.state === 'active' && status.currentPlayer === aiPlayer.aiColor) {
-            setTimeout(() => aiPlayer.makeMove(), 500);
+            const thinkingTime = parseInt(document.getElementById('ai-thinking-time').value);
+            showAIThinking();
+            
+            setTimeout(() => {
+                try {
+                    aiPlayer.makeMove().then(() => {
+                        hideAIThinking();
+                        // Force update the board after AI move
+                        updateBoardUI();
+                        updateGameStatus();
+                    }).catch(error => {
+                        console.error("AI move failed:", error);
+                        hideAIThinking();
+                    });
+                } catch (error) {
+                    console.error("Error in AI move:", error);
+                    hideAIThinking();
+                }
+            }, 300); // Short delay for UI responsiveness
         }
         debugMoves();
     }
@@ -149,9 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const moves = piece.getLegalMoves();
                 totalMoves += moves.length;
-                console.log(`Piece: ${piece.type} at (${piece.position.x}, ${piece.position.y}) can move to:`, moves);
+                console.log(`Piece: ${piece.type} at (${piece.position.x},${piece.position.y}) can move to:`, moves);
             } catch (error) {
-                console.warn(`Error getting moves for ${piece.type} at (${piece.position.x}, ${piece.position.y})`, error);
+                console.warn(`Error getting moves for ${piece.type} at (${piece.position.x},${piece.position.y})`, error);
             }
         });
 
@@ -207,8 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Handle square click
     function handleSquareClick(x, y) {
-        if (!board) return; // Ensure board is initialized
-        if (board.gameState !== 'active') return; // Ignore clicks if game is not active
+        console.log(`Clicked square at (${x}, ${y})`);
+        
         if (pendingPromotion) return; // Don't allow moves during promotion
         
         const clickedPiece = board.squares[x][y];
@@ -218,10 +296,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Only select pieces of the current player's color
             if (clickedPiece && clickedPiece.color === board.currentPlayer) {
                 selectedPiece = clickedPiece;
-                console.log(`Selected ${clickedPiece.type} at (${x},${y})`);
-                // Log legal moves for debugging
-                const legalMoves = selectedPiece.getLegalMoves();
-                console.log(`Legal moves:`, legalMoves);
                 updateBoardUI();
             }
             return;
@@ -232,10 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // If clicking on another piece of the same color, select it instead
         if (clickedPiece && clickedPiece.color === selectedPiece.color) {
             selectedPiece = clickedPiece;
-            console.log(`Selected ${clickedPiece.type} at (${x},${y})`);
-            // Log legal moves for debugging
-            const legalMoves = selectedPiece.getLegalMoves();
-            console.log(`Legal moves:`, legalMoves);
             updateBoardUI();
             return;
         }
@@ -244,10 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const legalMoves = selectedPiece.getLegalMoves();
         const isLegalMove = legalMoves.some(move => move.x === x && move.y === y);
         
-        console.log(`Attempting move to (${x},${y}), legal: ${isLegalMove}`);
-        
         if (isLegalMove) {
-            // Check if this is a promotion move
+            // Check if this is a pawn promotion
             if (selectedPiece instanceof Pawn && (x === 0 || x === 7)) {
                 showPromotionOptions(selectedPiece.position, {x, y});
             } else {
@@ -317,95 +385,66 @@ document.addEventListener('DOMContentLoaded', () => {
                 'king': '♚'
             }
         };
-        
-        return symbols[piece.color][piece.type];
+        return symbols[piece.color][piece.type.toLowerCase()];
     }
     
     function addAIControls() {
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'ai-controls';
-
-        const aiToggle = document.createElement('input');
-        aiToggle.type = 'checkbox';
-        aiToggle.id = 'ai-toggle';
-        aiToggle.checked = playAgainstAI;
-        aiToggle.addEventListener('change', () => {
-            playAgainstAI = aiToggle.checked;
+        const aiActiveCheckbox = document.getElementById('ai-active');
+        const aiColorSelect = document.getElementById('ai-color');
+        const aiDifficultySlider = document.getElementById('ai-difficulty');
+        const difficultyValue = document.getElementById('difficulty-value');
+        const aiThinkingTime = document.getElementById('ai-thinking-time');
+        
+        // Initialize with current values
+        aiActiveCheckbox.checked = playAgainstAI;
+        aiColorSelect.value = aiPlayer.aiColor;
+        aiDifficultySlider.value = aiPlayer.skillLevel;
+        difficultyValue.textContent = aiPlayer.skillLevel;
+        
+        // Update AI settings when changed
+        aiActiveCheckbox.addEventListener('change', function() {
+            playAgainstAI = this.checked;
+            console.log(`Play against AI: ${playAgainstAI}`);
+            
+            // If AI is enabled and it's AI's turn, make a move
             if (playAgainstAI && board.currentPlayer === aiPlayer.aiColor) {
-                aiPlayer.makeMove();
+                setTimeout(() => aiPlayer.makeMove(), parseInt(aiThinkingTime.value));
             }
         });
-
-        const aiToggleLabel = document.createElement('label');
-        aiToggleLabel.htmlFor = 'ai-toggle';
-        aiToggleLabel.textContent = 'Play against AI';
-
-        const difficultySlider = document.createElement('input');
-        difficultySlider.type = 'range';
-        difficultySlider.min = '1';
-        difficultySlider.max = '16';
-        difficultySlider.value = aiPlayer.skillLevel;
-        difficultySlider.id = 'difficulty-slider';
-        difficultySlider.addEventListener('change', () => {
-            aiPlayer.setSkillLevel(parseInt(difficultySlider.value, 10));
+        
+        aiColorSelect.addEventListener('change', function() {
+            aiPlayer.aiColor = this.value;
+            console.log(`AI color: ${aiPlayer.aiColor}`);
+            
+            // If it's now AI's turn after changing color, make a move
+            if (playAgainstAI && board.currentPlayer === aiPlayer.aiColor) {
+                setTimeout(() => aiPlayer.makeMove(), parseInt(aiThinkingTime.value));
+            }
         });
-
-        const difficultyLabel = document.createElement('label');
-        difficultyLabel.htmlFor = 'difficulty-slider';
-        difficultyLabel.textContent = 'AI Difficulty: ';
-
-        const difficultyValue = document.createElement('span');
-        difficultyValue.id = 'difficulty-value';
-        difficultyValue.textContent = aiPlayer.skillLevel;
-
-        difficultySlider.addEventListener('input', () => {
-            difficultyValue.textContent = difficultySlider.value;
+        
+        aiDifficultySlider.addEventListener('input', function() {
+            const level = parseInt(this.value);
+            aiPlayer.skillLevel = level;
+            difficultyValue.textContent = level;
+            console.log(`AI difficulty: ${level}`);
         });
-
-        // Color selection
-        const colorSelect = document.createElement('select');
-        colorSelect.id = 'ai-color';
-
-        const whiteOption = document.createElement('option');
-        whiteOption.value = 'black';
-        whiteOption.textContent = 'Play as White';
-
-        const blackOption = document.createElement('option');
-        blackOption.value = 'white';
-        blackOption.textContent = 'Play as Black';
-
-        colorSelect.appendChild(whiteOption);
-        colorSelect.appendChild(blackOption);
-        colorSelect.value = aiPlayer.aiColor;
-
-        colorSelect.addEventListener('change', () => {
-            aiPlayer.setAIColor(colorSelect.value);
+        
+        aiThinkingTime.addEventListener('change', function() {
+            console.log(`AI thinking time: ${this.value}ms`);
         });
+    }
 
-        controlsDiv.appendChild(aiToggleLabel);
-        controlsDiv.appendChild(aiToggle);
-        controlsDiv.appendChild(document.createElement('br'));
-        controlsDiv.appendChild(difficultyLabel);
-        controlsDiv.appendChild(difficultySlider);
-        controlsDiv.appendChild(difficultyValue);
-        controlsDiv.appendChild(document.createElement('br'));
-        controlsDiv.appendChild(colorSelect);
+    function showAIThinking() {
+        aiThinkingIndicator.classList.remove('hidden');
+    }
 
-        document.querySelector('.container').insertBefore(controlsDiv, boardElement);
+    function hideAIThinking() {
+        aiThinkingIndicator.classList.add('hidden');
     }
 
     // Reset game
     resetButton.addEventListener('click', () => {
-        board = new Board();
-        aiPlayer = new StockfishAI(board);
-        selectedPiece = null;
-        pendingPromotion = null;
-        
-        // Make sure modal is hidden on reset
-        hidePromotionModal();
-        
-        initializeBoard();
-        addAIControls();
+        resetGame();
     });
 
     function showGameEndModal(result) {
@@ -447,6 +486,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         initializeBoard();
         addAIControls();
+        
+        // If AI should move first (when AI is white)
+        if (playAgainstAI && board.currentPlayer === aiPlayer.aiColor) {
+            const thinkingTime = parseInt(document.getElementById('ai-thinking-time').value);
+            setTimeout(() => aiPlayer.makeMove(), thinkingTime);
+        }
     }
     
     // Make sure pendingPromotion is null on startup
@@ -460,9 +505,23 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         initializeBoard();
         addAIControls();
-        // One more check after everything is set up
-        setTimeout(hidePromotionModal, 100);
+        
+        // Add reset button functionality
+        const resetButton = document.getElementById('reset-button');
+        if (resetButton) {
+            resetButton.addEventListener('click', resetGame);
+        }
+        
+        // Update game status
+        updateGameStatus();
     } catch (error) {
         console.error("Error initializing chess game:", error);
+    } finally {
+        // Always hide the modal, even if other code fails
+        if (promotionModal) {
+            promotionModal.classList.add('hidden');
+            promotionModal.style.display = 'none';
+            console.log('Modal hidden in finally block');
+        }
     }
 });

@@ -65,7 +65,7 @@ const requestHandler = (request, response) => {
     let filePath = '.' + request.url;
 
     if (request.url === '/') {
-        filePath = './index.html';
+        filePath = './index/service.html/index.html';
     }
 
     const extname = String(path.extname(filePath)).toLowerCase();

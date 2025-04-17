@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chess Game</title>
+        <link rel="stylesheet" href="./css/styles.css">
+    </head>
+    <body>
+        <div class="container">
+            <h1>Chess Game</h1>
+            <div id="game-status">Current player: White</div>
+            <div class="board-timers">
+                <div id="clock1">00:00</div>
+                <div id="chessboard"></div>
+                <div id="clock2">00:00</div>
+            </div>
+
+            <div id="promotion-modal" class="hidden" style="display: none !important; visibility: hidden !important;">
+                <div class="promotion-options">
+                    <div class="promotion-piece" data-piece="queen">♛</div>
+                    <div class="promotion-piece" data-piece="rook">♜</div>
+                    <div class="promotion-piece" data-piece="bishop">♝</div>
+                    <div class="promotion-piece" data-piece="knight">♞</div>
+                </div>
+            </div>
+
+            <div class="ai-controls">
+                <h3>AI Settings</h3>
+                <div class="control-group">
+                    <label for="ai-active">Play against AI:</label>
+                    <input type="checkbox" id="ai-active" checked>
+                </div>
+                
+                <div class="control-group">
+                    <label for="ai-color">AI plays as:</label>
+                    <select id="ai-color">
+                        <option value="black" selected>Black</option>
+                        <option value="white">White</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="ai-difficulty">Difficulty:</label>
+                    <input type="range" id="ai-difficulty" min="1" max="10" value="5">
+                    <span id="difficulty-value">5</span>
+                </div>
+                
+                <div class="control-group">
+                    <label for="ai-thinking-time">Thinking time (ms):</label>
+                    <select id="ai-thinking-time">
+                        <option value="100">Fast (100ms)</option>
+                        <option value="500" selected>Normal (500ms)</option>
+                        <option value="1000">Slow (1000ms)</option>
+                        <option value="2000">Deep (2000ms)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="reset-button">Reset Game</button>
+
+        </div>
+
+        <script src="../../pawns/piece.js"></script>
+        <script src="../../pawns/pawn.js"></script>
+        <script src="../../pawns/rook.js"></script>
+        <script src="../../pawns/knight.js"></script>
+        <script src="../../pawns/bishop.js"></script>
+        <script src="../../pawns/queen.js"></script>
+        <script src="../../pawns/king.js"></script>
+        <script src="../../gamefolder/board.js"></script>
+        <script src="../../gamefolder/Stockfish.js"></script>
+
+        <script src="../../gamefolder/game.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                let timer;
+                let minutes1 = 0;
+                let seconds1 = 0;
+                let minutes2 = 0;
+                let seconds2 = 0;
+
+                function displayTime() {
+                    document.getElementById("clock1").textContent =
+                        `${minutes1.toString().padStart(2, '0')}:${seconds1.toString().padStart(2, '0')}`;
+                    
+                    document.getElementById("clock2").textContent =
+                        `${minutes2.toString().padStart(2, '0')}:${seconds2.toString().padStart(2, '0')}`;
+                }
+
+                timer = setInterval(() => {
+                    if (document.getElementById("game-status").textContent.includes("White")) {
+                        seconds1++;
+                        if (seconds1 === 60) {
+                            seconds1 = 0;
+                            minutes1++;
+                        }
+                        displayTime();
+                    } else if (document.getElementById("game-status").textContent.includes("Black")) {
+                        seconds2++;
+                        if (seconds2 === 60) {
+                            seconds2 = 0;
+                            minutes2++;
+                        }
+                        displayTime();
+                    }
+                }, 1000);
+            });
+        </script>
+    </body>
+</html>

@@ -448,50 +448,92 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function showGameEndModal(result) {
+        // First, hide any existing modal
+        hideGameEndModal();
+        
+        // Create new modal with proper structure
         const modal = document.createElement('div');
         modal.id = 'game-end-modal';
         modal.classList.add('modal');
-
+        
         modal.innerHTML = `
             <div class="modal-content">
                 <h2 id="end-result">${result}</h2>
                 <button id="new-game-button">New Game</button>
             </div>
-            `;
-
-            document.querySelector('.container').appendChild(modal);
-
-            document.getElementById('new-game-button').addEventListener('click', () => {
+        `;
+        
+        // Append to DOM
+        document.querySelector('.container').appendChild(modal);
+        
+        // Find the button and bind event using separate step
+        const newGameButton = document.getElementById('new-game-button');
+        
+        // Clean up any existing event listeners
+        if (newGameButton) {
+            const newButton = newGameButton.cloneNode(true);
+            newGameButton.parentNode.replaceChild(newButton, newGameButton);
+            
+            // Add the click handler
+            newButton.addEventListener('click', function() {
+                console.log("New game button clicked");
+                hideGameEndModal();
                 resetGame();
-                modal.remove();
             });
+        }
     }
 
     function hideGameEndModal() {
         const existingModal = document.getElementById('game-end-modal');
         if (existingModal) {
+            // First remove event listeners to prevent memory leaks
+            const newGameButton = document.getElementById('new-game-button');
+            if (newGameButton) {
+                const newButton = newGameButton.cloneNode(false);
+                if (newGameButton.parentNode) {
+                    newGameButton.parentNode.replaceChild(newButton, newGameButton);
+                }
+            }
+            
+            // Then remove the modal
             existingModal.remove();
+            console.log("Game end modal removed");
         }
     }
 
     function resetGame() {
-        hideGameEndModal();
+        console.log("Resetting game...");
+        // No need to call hideGameEndModal here - it should be called before this function
+        
+        // Reset game state
         board = new Board();
-        aiPlayer = new StockfishAI(board);
+        aiPlayer = new StockfishAI(board, 
+            document.getElementById('ai-color').value, 
+            parseInt(document.getElementById('ai-difficulty').value)
+        );
+        
         selectedPiece = null;
         pendingPromotion = null;
         
         // Make sure modal is hidden on reset
         hidePromotionModal();
         
+        // Rebuild the board
         initializeBoard();
+        
+        // Update AI controls to match new board state
         addAIControls();
+        
+        // Update game status display
+        updateGameStatus();
         
         // If AI should move first (when AI is white)
         if (playAgainstAI && board.currentPlayer === aiPlayer.aiColor) {
             const thinkingTime = parseInt(document.getElementById('ai-thinking-time').value);
             setTimeout(() => aiPlayer.makeMove(), thinkingTime);
         }
+        
+        console.log("Game reset complete");
     }
     
     // Make sure pendingPromotion is null on startup
